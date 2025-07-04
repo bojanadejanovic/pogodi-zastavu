@@ -4,9 +4,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 interface GameStartProps {
   onStartGame: () => void;
+  isLoading: boolean;
 }
 
-export default function GameStart({ onStartGame }: GameStartProps) {
+export default function GameStart({ onStartGame, isLoading }: GameStartProps) {
   const { t } = useLanguage();
 
   return (
@@ -57,9 +58,14 @@ export default function GameStart({ onStartGame }: GameStartProps) {
       <div className="space-y-4">
         <button
           onClick={onStartGame}
-          className="w-full bg-primary-500 text-white py-4 px-8 rounded-lg text-xl font-semibold hover:bg-primary-600 transform hover:scale-105 transition-all duration-200 shadow-lg"
+          disabled={isLoading}
+          className={`w-full py-4 px-8 rounded-lg text-xl font-semibold transition-all duration-200 shadow-lg ${
+            isLoading
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-primary-500 text-white hover:bg-primary-600 transform hover:scale-105'
+          }`}
         >
-          {t('game.start')}
+          {isLoading ? t('ui.loading') : t('game.start')}
         </button>
         
         <div className="text-sm text-gray-500">

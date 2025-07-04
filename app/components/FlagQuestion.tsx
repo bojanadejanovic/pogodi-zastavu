@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FlagQuestion as FlagQuestionType } from '../data/flags';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -17,6 +17,19 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [isAnswered, setIsAnswered] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  // Preload the flag image when component mounts
+  useEffect(() => {
+    setImageLoaded(false);
+    setImageError(false);
+    
+    const img = new Image();
+    img.onload = () => setImageLoaded(true);
+    img.onerror = () => setImageError(true);
+    img.src = question.flagImage;
+  }, [question.flagImage]);
 
   const handleAnswerSelect = (answer: string) => {
     if (isAnswered) return;
@@ -68,17 +81,25 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
       {/* Flag image */}
       <div className="text-center mb-6">
         <div className="relative inline-block">
-          <img
-            src={question.flagImage}
-            alt={`Flag of ${countryName(question.countryCode)}`}
-            className="w-64 h-40 object-cover border-2 border-gray-300 rounded-lg shadow-md"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = '/placeholder-flag.png';
-              target.alt = 'Flag placeholder';
-            }}
-          />
-          {showResult && (
+          {!imageLoaded && !imageError && (
+            <div className="w-64 h-40 bg-gray-200 border-2 border-gray-300 rounded-lg shadow-md flex items-center justify-center">
+              <div className="text-gray-500">Loading flag...</div>
+            </div>
+          )}
+          {imageError && (
+            <div className="w-64 h-40 bg-gray-200 border-2 border-gray-300 rounded-lg shadow-md flex items-center justify-center">
+              <div className="text-gray-500">Flag not available</div>
+            </div>
+          )}
+          {imageLoaded && (
+            <img
+              src={question.flagImage}
+              alt={`Flag of ${countryName(question.countryCode)}`}
+              className="w-64 h-40 object-cover border-2 border-gray-300 rounded-lg shadow-md"
+              style={{ display: imageLoaded ? 'block' : 'none' }}
+            />
+          )}
+          {showResult && imageLoaded && (
             <div className={`absolute inset-0 flex items-center justify-center rounded-lg ${
               isCorrect ? 'bg-success-500 bg-opacity-20' : 'bg-error-500 bg-opacity-20'
             }`}>
@@ -151,14 +172,14 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
       <div className="text-center">
         <button
           onClick={handleSubmit}
-          disabled={!selectedAnswer || isAnswered}
+          disabled={!selectedAnswer || isAnswered || !imageLoaded}
           className={`px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
-            !selectedAnswer || isAnswered
+            !selectedAnswer || isAnswered || !imageLoaded
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-primary-500 text-white hover:bg-primary-600 transform hover:scale-105'
           }`}
         >
-          {isAnswered ? t('game.moving') : t('game.submit')}
+          {!imageLoaded ? t('ui.loading') : isAnswered ? t('game.moving') : t('game.submit')}
         </button>
       </div>
 

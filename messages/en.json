@@ -33,7 +33,8 @@
     "correctAnswer": "Correct Answer",
     "wrongAnswer": "Wrong Answer",
     "percentage": "{percentage}% Correct",
-    "quit": "Quit Game"
+    "quit": "Quit Game",
+    "loading": "Loading..."
   },
   "countries": {
     "us": "United States",

@@ -33,7 +33,8 @@
     "correctAnswer": "Тачан одговор",
     "wrongAnswer": "Нетачан одговор",
     "percentage": "{percentage}% Тачно",
-    "quit": "Напусти игру"
+    "quit": "Напусти игру",
+    "loading": "Учитавање..."
   },
   "countries": {
     "us": "Сједињене Америчке Државе",
