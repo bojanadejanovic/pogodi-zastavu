@@ -1,0 +1,4 @@
+# This is a placeholder for flag images
+# Replace this file with actual flag PNG images
+# The game expects flag images in the /public/flags/ directory
+# with names like: usa.png, france.png, japan.png, etc. 

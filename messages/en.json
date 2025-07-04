@@ -1,0 +1,68 @@
+{
+  "game": {
+    "title": "Guess the Flag 🚩",
+    "subtitle": "Flag Guessing Game",
+    "description": "Test your knowledge of world flags!",
+    "start": "Start Game",
+    "question": "Which country does this flag belong to?",
+    "submit": "Submit Answer",
+    "moving": "Moving to next question...",
+    "correct": "Correct! Well done!",
+    "incorrect": "Incorrect. The correct answer is {country}.",
+    "results": "Game Complete!",
+    "playAgain": "Play Again",
+    "challenge": "Challenge yourself with different flags each time!",
+    "flagsInfo": "Flags are randomly selected from a collection of over 200 countries"
+  },
+  "instructions": {
+    "title": "How to Play",
+    "step1": "You'll see 10 flag images one by one",
+    "step2": "Choose the correct country from 4 options",
+    "step3": "Get points for each correct answer",
+    "step4": "See your final score and try again!"
+  },
+  "results": {
+    "perfect": "Perfect! You're a flag expert! 🏆🎉",
+    "excellent": "Excellent! Great job! 🌟",
+    "good": "Good work! Keep learning! 👍",
+    "notBad": "Not bad! Practice makes perfect! 📚",
+    "keepStudying": "Keep studying flags! You'll get better! 💪"
+  },
+  "ui": {
+    "questionOf": "Question {current} of {total}",
+    "correctAnswer": "Correct Answer",
+    "wrongAnswer": "Wrong Answer",
+    "percentage": "{percentage}% Correct",
+    "quit": "Quit Game"
+  },
+  "countries": {
+    "us": "United States",
+    "fr": "France",
+    "jp": "Japan",
+    "br": "Brazil",
+    "de": "Germany",
+    "it": "Italy",
+    "es": "Spain",
+    "ca": "Canada",
+    "au": "Australia",
+    "gb": "United Kingdom",
+    "cn": "China",
+    "kr": "South Korea",
+    "th": "Thailand",
+    "ar": "Argentina",
+    "cl": "Chile",
+    "co": "Colombia",
+    "at": "Austria",
+    "ch": "Switzerland",
+    "nl": "Netherlands",
+    "pt": "Portugal",
+    "gr": "Greece",
+    "mx": "Mexico",
+    "nz": "New Zealand",
+    "fj": "Fiji",
+    "pg": "Papua New Guinea",
+    "ie": "Ireland",
+    "sc": "Scotland",
+    "wa": "Wales"
+  }
+}
