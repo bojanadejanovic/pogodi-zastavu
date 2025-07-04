@@ -4,12 +4,15 @@ A fun and interactive flag guessing game built with Next.js, TypeScript, and Tai
 
 ## Features
 
-- 🏁 **Interactive Gameplay**: Answer 4 multiple choice questions about world flags
-- 🎯 **Random Selection**: Flags are randomly selected from a pool of 10 countries
+- 🏁 **Interactive Gameplay**: Answer 10 multiple choice questions about world flags
+- 🎯 **True Randomness**: Flags are randomly selected from a pool of over 200 countries
 - 📊 **Score Tracking**: Keep track of your correct answers
 - 🎨 **Beautiful UI**: Modern, responsive design with smooth animations
 - 📱 **Mobile Friendly**: Works perfectly on all device sizes
 - 🔄 **Replayable**: Play again to improve your score
+- 🌍 **Bilingual**: Support for English and Serbian
+- 🚩 **Error Reporting**: Report issues with questions via email
+- 🎉 **Confetti Animation**: Special celebration for perfect scores
 
 ## Game Flow
 
@@ -21,7 +24,7 @@ A fun and interactive flag guessing game built with Next.js, TypeScript, and Tai
 
 ## Countries Included
 
-The game includes all flags located in `public\flags_svg`
+The game includes flags from over 200 countries and territories, providing a truly diverse and challenging experience.
 
 ## Getting Started
 
@@ -45,19 +48,13 @@ npm install
 yarn install
 ```
 
-3. Add flag images:
-   - Create a `public/flags/` directory
-   - Add flag images with the following names:
-     - `usa.png`
-     - `france.png`
-     - `japan.png`
-     - `brazil.png`
-     - `germany.png`
-     - `italy.png`
-     - `spain.png`
-     - `canada.png`
-     - `australia.png`
-     - `uk.png`
+3. Set up environment variables (optional, for error reporting):
+```bash
+# Create .env.local file
+MAILGUN_API_KEY=your-mailgun-api-key-here
+MAILGUN_DOMAIN=your-mailgun-domain.com
+REPORT_EMAIL=your-email@example.com
+```
 
 4. Run the development server:
 ```bash
@@ -68,22 +65,44 @@ yarn dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
+## Environment Variables
+
+For error reporting functionality, you can set up the following environment variables:
+
+- `MAILGUN_API_KEY`: Your Mailgun API key
+- `MAILGUN_DOMAIN`: Your Mailgun domain
+- `REPORT_EMAIL`: Email address where error reports will be sent
+
+If these variables are not set, the error reporting feature will be disabled.
+
 ## Project Structure
 
 ```
 pogodi-zastavu/
 ├── app/
+│   ├── api/
+│   │   └── report-error/     # Error reporting API endpoint
 │   ├── components/
-│   │   ├── FlagQuestion.tsx    # Individual question component
-│   │   ├── GameResults.tsx     # Results screen component
-│   │   └── GameStart.tsx       # Welcome screen component
+│   │   ├── Confetti.tsx      # Confetti animation component
+│   │   ├── FlagQuestion.tsx  # Individual question component
+│   │   ├── Footer.tsx        # Footer component
+│   │   ├── GameResults.tsx   # Results screen component
+│   │   ├── GameStart.tsx     # Welcome screen component
+│   │   ├── LanguageSwitcher.tsx # Language switcher
+│   │   └── ReportError.tsx   # Error reporting modal
+│   ├── contexts/
+│   │   └── LanguageContext.tsx # Language context provider
 │   ├── data/
-│   │   └── flags.ts           # Flag questions data
-│   ├── globals.css            # Global styles
-│   ├── layout.tsx             # Root layout
-│   └── page.tsx               # Main game page
+│   │   ├── countries.ts      # Countries data
+│   │   └── flags.ts          # Flag questions logic
+│   ├── globals.css           # Global styles
+│   ├── layout.tsx            # Root layout
+│   └── page.tsx              # Main game page
+├── messages/
+│   ├── en.json              # English translations
+│   └── sr.json              # Serbian translations
 ├── public/
-│   └── flags/                 # Flag images directory
+│   └── flags_svg/           # Flag images directory
 ├── package.json
 ├── tailwind.config.js
 └── README.md
@@ -95,20 +114,31 @@ pogodi-zastavu/
 - **TypeScript**: Type-safe JavaScript
 - **Tailwind CSS**: Utility-first CSS framework
 - **React Hooks**: State management and side effects
+- **Mailgun**: Email service for error reporting
+- **Canvas Confetti**: Confetti animation library
 
 ## Customization
 
 ### Adding More Countries
 
-1. Add flag images to `public/flags/`
-2. Update the `flagQuestions` array in `app/data/flags.ts`
-3. Add new question objects with correct answers and options
+1. Add flag images to `public/flags_svg/`
+2. Update the `countries` array in `app/data/countries.ts`
+3. Add new country objects with correct answers and options
 
 ### Changing Game Settings
 
-- Modify `getRandomQuestions(4)` in `app/page.tsx` to change the number of questions
+- Modify `getRandomQuestions(10)` in `app/data/flags.ts` to change the number of questions
 - Update styling in component files or `tailwind.config.js`
 - Adjust timing in `FlagQuestion.tsx` for result display duration
+
+## Error Reporting
+
+Users can report issues with questions by clicking the "Report an error" link below the submit button. This will:
+
+1. Open a modal with question information
+2. Allow users to describe the issue
+3. Optionally provide their email for follow-up
+4. Send the report to your configured email address
 
 ## Deployment
 
@@ -118,6 +148,8 @@ The app can be deployed to Vercel, Netlify, or any other Next.js-compatible host
 npm run build
 npm start
 ```
+
+For Vercel deployment, make sure to set the environment variables in the Vercel dashboard.
 
 ## Contributing
 

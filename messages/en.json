@@ -34,7 +34,8 @@
     "wrongAnswer": "Wrong Answer",
     "percentage": "{percentage}% Correct",
     "quit": "Quit Game",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "reportError": "Report an error"
   },
   "countries": {
     "us": "United States",
@@ -65,5 +66,22 @@
     "ie": "Ireland",
     "sc": "Scotland",
     "wa": "Wales"
+  },
+  "report": {
+    "title": "Report an Error",
+    "questionInfo": "Question Information",
+    "flag": "Flag Image",
+    "correctAnswer": "Correct Answer",
+    "options": "Answer Options",
+    "description": "Describe the issue",
+    "placeholder": "Please describe what's wrong with this question...",
+    "email": "Your Email",
+    "optional": "optional",
+    "emailPlaceholder": "your@email.com",
+    "submit": "Send Report",
+    "cancel": "Cancel",
+    "sending": "Sending...",
+    "success": "Report sent successfully! Thank you for your feedback.",
+    "error": "Failed to send report. Please try again."
   }
 }
