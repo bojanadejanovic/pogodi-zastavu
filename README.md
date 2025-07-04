@@ -21,17 +21,7 @@ A fun and interactive flag guessing game built with Next.js, TypeScript, and Tai
 
 ## Countries Included
 
-The game includes flags from 10 countries:
-- United States
-- France
-- Japan
-- Brazil
-- Germany
-- Italy
-- Spain
-- Canada
-- Australia
-- United Kingdom
+The game includes all flags located in `public\flags_svg`
 
 ## Getting Started
 
