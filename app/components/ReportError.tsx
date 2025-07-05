@@ -87,7 +87,7 @@ export default function ReportError({ question, onClose }: ReportErrorProps) {
                 id="userReport"
                 value={userReport}
                 onChange={(e) => setUserReport(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 bg-white"
                 rows={4}
                 placeholder={t('report.placeholder')}
                 required
