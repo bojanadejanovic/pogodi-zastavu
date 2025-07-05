@@ -184,9 +184,7 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
               </div>
               <span className={`font-medium ${
                 selectedAnswer === option && isAnswered
-                  ? option === question.correctAnswer
-                    ? 'text-success-700'
-                    : 'text-error-700'
+                  ? 'text-gray-900'
                   : 'text-gray-700'
               }`}>
                 {countryName(option)}
