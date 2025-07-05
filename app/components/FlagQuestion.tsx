@@ -58,7 +58,7 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
 
   return (
     <>
-      <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-12 md:mt-0">
+      <div className="max-w-full md:max-w-4xl w-full mx-auto p-2 md:p-6 bg-white rounded-lg shadow-lg mt-4 md:mt-0">
         {/* Header with progress and quit button */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex-1 mr-8">
@@ -91,15 +91,15 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
         </div>
 
         {/* Flag image */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-3 md:mb-6">
           <div className="relative inline-block">
             {!imageLoaded && !imageError && (
-              <div className="w-64 h-40 bg-gray-200 border-2 border-gray-300 rounded-lg shadow-md flex items-center justify-center">
+              <div className="w-40 h-24 md:w-64 md:h-40 bg-gray-200 border-2 border-gray-300 rounded-lg shadow-md flex items-center justify-center">
                 <div className="text-gray-500">Loading flag...</div>
               </div>
             )}
             {imageError && (
-              <div className="w-64 h-40 bg-gray-200 border-2 border-gray-300 rounded-lg shadow-md flex items-center justify-center">
+              <div className="w-40 h-24 md:w-64 md:h-40 bg-gray-200 border-2 border-gray-300 rounded-lg shadow-md flex items-center justify-center">
                 <div className="text-gray-500">Flag not available</div>
               </div>
             )}
@@ -107,7 +107,7 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
               <img
                 src={question.flagImage}
                 alt={`Flag of ${countryName(question.countryCode)}`}
-                className="w-64 h-40 object-cover border-2 border-gray-300 rounded-lg shadow-md"
+                className="w-40 h-24 md:w-64 md:h-40 object-cover border-2 border-gray-300 rounded-lg shadow-md"
                 style={{ display: imageLoaded ? 'block' : 'none' }}
               />
             )}
@@ -146,11 +146,11 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
         </h2>
 
         {/* Answer options */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
           {question.options.map((option, index) => (
             <label
               key={index}
-              className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+              className={`flex items-center p-2 md:p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
                 selectedAnswer === option
                   ? isAnswered
                     ? option === question.correctAnswer
