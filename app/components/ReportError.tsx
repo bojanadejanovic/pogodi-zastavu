@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { FlagQuestion as FlagQuestionType } from '../data/flags';
 
@@ -15,6 +15,7 @@ export default function ReportError({ question, onClose }: ReportErrorProps) {
   const [userEmail, setUserEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +91,12 @@ export default function ReportError({ question, onClose }: ReportErrorProps) {
                 rows={4}
                 placeholder={t('report.placeholder')}
                 required
+                ref={textareaRef}
+                onFocus={() => {
+                  if (textareaRef.current) {
+                    textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
               />
             </div>
 
