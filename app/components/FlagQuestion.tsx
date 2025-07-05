@@ -73,7 +73,8 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
               ></div>
             </div>
           </div>
-          <div className="flex flex-col space-y-2">
+          {/* Desktop only: quit/report buttons */}
+          <div className="hidden md:flex flex-col space-y-2">
             <button
               onClick={onQuit}
               className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
@@ -121,6 +122,21 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                 </span>
               </div>
             )}
+          </div>
+          {/* Mobile only: quit/report buttons below flag */}
+          <div className="flex flex-col items-center space-y-2 mt-4 md:hidden">
+            <button
+              onClick={onQuit}
+              className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 w-40"
+            >
+              {t('ui.quit')}
+            </button>
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="text-xs text-gray-500 hover:text-gray-700 underline"
+            >
+              {t('ui.reportError')} ❓
+            </button>
           </div>
         </div>
 
