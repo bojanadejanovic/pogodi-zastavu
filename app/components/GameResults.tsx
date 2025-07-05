@@ -29,7 +29,7 @@ export default function GameResults({ score, totalQuestions, onRestart }: GameRe
     return "💪";
   };
 
-  const isPerfectScore = score === totalQuestions;
+  const isPerfectScore = score >= 14;
 
   return (
     <div className="max-w-2xl mx-auto p-8 bg-white rounded-lg shadow-lg text-center">

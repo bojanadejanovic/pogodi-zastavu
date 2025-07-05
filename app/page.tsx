@@ -29,7 +29,7 @@ export default function Home() {
 
   const startGame = () => {
     setIsLoading(true);
-    const randomQuestions = getRandomQuestions(10);
+    const randomQuestions = getRandomQuestions(15);
     setQuestions(randomQuestions);
     setCurrentQuestionIndex(0);
     setScore(0);

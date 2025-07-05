@@ -58,10 +58,10 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
 
   return (
     <>
-      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
         {/* Header with progress and quit button */}
         <div className="flex justify-between items-center mb-6">
-          <div className="flex-1">
+          <div className="flex-1 mr-8">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
               <span>{t('ui.questionOf', { current: questionNumber, total: totalQuestions })}</span>
               <span>{Math.round((questionNumber / totalQuestions) * 100)}%</span>
@@ -73,12 +73,20 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
               ></div>
             </div>
           </div>
-          <button
-            onClick={onQuit}
-            className="ml-4 px-4 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200"
-          >
-            {t('ui.quit')}
-          </button>
+          <div className="flex flex-col space-y-2">
+            <button
+              onClick={onQuit}
+              className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
+            >
+              {t('ui.quit')}
+            </button>
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="text-xs text-gray-500 hover:text-gray-700 underline"
+            >
+              {t('ui.reportError')} ❓
+            </button>
+          </div>
         </div>
 
         {/* Flag image */}
@@ -171,8 +179,8 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
           ))}
         </div>
 
-        {/* Submit button and report button */}
-        <div className="text-center space-y-4">
+        {/* Submit button */}
+        <div className="text-center">
           <button
             onClick={handleSubmit}
             disabled={!selectedAnswer || isAnswered || !imageLoaded}
@@ -183,13 +191,6 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
             }`}
           >
             {!imageLoaded ? t('ui.loading') : isAnswered ? t('game.moving') : t('game.submit')}
-          </button>
-          
-          <button
-            onClick={() => setShowReportModal(true)}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
-          >
-            {t('ui.reportError')} ❓
           </button>
         </div>
 
