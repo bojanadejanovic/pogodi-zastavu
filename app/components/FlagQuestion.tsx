@@ -153,13 +153,13 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
               className={`flex items-center p-2 md:p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
                 ${isAnswered
                   ? option === question.correctAnswer
-                    ? 'border-success-500 bg-success-50 text-success-700'
+                    ? 'border-success-500 bg-success-50'
                     : selectedAnswer === option
-                      ? 'border-error-500 bg-error-50 text-error-700'
-                      : 'border-gray-200 text-gray-700'
+                      ? 'border-error-500 bg-error-50'
+                      : 'border-gray-200'
                   : selectedAnswer === option
-                    ? 'border-primary-500 bg-primary-50 text-gray-900'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-700'}
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 hover:border-gray-300'}
                 ${isAnswered ? 'cursor-default' : 'hover:bg-gray-50'}`}
             >
               <input
@@ -184,7 +184,17 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 )}
               </div>
-              <span className="font-medium flex items-center gap-2">
+              <span className={`font-medium flex items-center gap-2
+                ${isAnswered
+                  ? option === question.correctAnswer
+                    ? 'text-success-700'
+                    : selectedAnswer === option
+                      ? 'text-error-700'
+                      : 'text-gray-900'
+                  : selectedAnswer === option
+                    ? 'text-gray-900'
+                    : 'text-gray-900'}
+              `}>
                 {countryName(option)}
                 {isAnswered && option === question.correctAnswer && (
                   <span className="ml-2 text-success-700">✅</span>
