@@ -150,15 +150,17 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
           {question.options.map((option, index) => (
             <label
               key={index}
-              className={`flex items-center p-2 md:p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                selectedAnswer === option
-                  ? isAnswered
-                    ? option === question.correctAnswer
-                      ? 'border-success-500 bg-success-50'
-                      : 'border-error-500 bg-error-50'
-                    : 'border-primary-500 bg-primary-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              } ${isAnswered ? 'cursor-default' : 'hover:bg-gray-50'}`}
+              className={`flex items-center p-2 md:p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
+                ${isAnswered
+                  ? option === question.correctAnswer
+                    ? 'border-success-500 bg-success-50 text-success-700'
+                    : selectedAnswer === option
+                      ? 'border-error-500 bg-error-50 text-error-700'
+                      : 'border-gray-200 text-gray-700'
+                  : selectedAnswer === option
+                    ? 'border-primary-500 bg-primary-50 text-gray-900'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700'}
+                ${isAnswered ? 'cursor-default' : 'hover:bg-gray-50'}`}
             >
               <input
                 type="radio"
@@ -182,12 +184,14 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 )}
               </div>
-              <span className={`font-medium ${
-                selectedAnswer === option && isAnswered
-                  ? 'text-gray-900'
-                  : 'text-gray-700'
-              }`}>
+              <span className="font-medium flex items-center gap-2">
                 {countryName(option)}
+                {isAnswered && option === question.correctAnswer && (
+                  <span className="ml-2 text-success-700">✅</span>
+                )}
+                {isAnswered && selectedAnswer === option && option !== question.correctAnswer && (
+                  <span className="ml-2 text-error-700">❌</span>
+                )}
               </span>
             </label>
           ))}
