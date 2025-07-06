@@ -69,7 +69,7 @@ export default function ReportError({ question, onClose }: ReportErrorProps) {
             </button>
           </div>
 
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg hidden">
             <h3 className="font-medium text-gray-700 mb-2">{t('report.questionInfo')}</h3>
             <div className="text-sm text-gray-600 space-y-1">
               <p><strong>{t('report.flag')}:</strong> {question.flagImage}</p>
