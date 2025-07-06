@@ -35,7 +35,8 @@
     "percentage": "{percentage}% Correct",
     "quit": "Quit Game",
     "loading": "Loading...",
-    "reportError": "Report an error"
+    "reportError": "Report an error",
+    "previousScores": "Your Previous Scores:"
   },
   "countries": {
     "us": "United States",

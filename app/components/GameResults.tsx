@@ -2,6 +2,8 @@
 
 import { useLanguage } from '../contexts/LanguageContext';
 import Confetti from './Confetti';
+import { useEffect, useState, useRef } from 'react';
+import { getOrCreateUserId } from '../utils/user';
 
 interface GameResultsProps {
   score: number;
@@ -13,6 +15,32 @@ export default function GameResults({ score, totalQuestions, onRestart }: GameRe
   const { t } = useLanguage();
   const percentage = Math.round((score / totalQuestions) * 100);
   
+  // --- Persistence logic ---
+  const [history, setHistory] = useState<{score: number, totalQuestions: number, createdAt: string}[]>([]);
+  const hasSaved = useRef(false);
+
+  async function fetchScores(userId: string) {
+    const res = await fetch(`/api/get-scores?userId=${userId}`);
+    const data = await res.json();
+    setHistory(data.scores || []);
+  }
+
+  useEffect(() => {
+    if (hasSaved.current) return;
+    hasSaved.current = true;
+
+    const userId = getOrCreateUserId();
+    // Save current score
+    fetch('/api/save-score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, score, totalQuestions }),
+    });
+    // Fetch history
+    fetchScores(userId);
+  }, [score, totalQuestions]);
+  // --- End persistence logic ---
+
   const getMessage = () => {
     if (percentage === 100) return t('results.perfect');
     if (percentage >= 80) return t('results.excellent');
@@ -82,6 +110,21 @@ export default function GameResults({ score, totalQuestions, onRestart }: GameRe
         <div className="text-sm text-gray-500">
           {t('game.challenge')}
         </div>
+
+        {/* Score history */}
+        {history.length > 0 && (
+          <div className="mt-6 text-left">
+            <div className="font-semibold mb-2">{t('ui.previousScores')}</div>
+            <ul className="space-y-1 text-sm">
+              {history.slice(0, 10).map((h, i) => (
+                <li key={i} className="flex justify-between">
+                  <span>{h.score}/{h.totalQuestions}</span>
+                  <span className="text-gray-400">{new Date(h.createdAt).toLocaleString()}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -35,7 +35,8 @@
     "percentage": "{percentage}% Тачно",
     "quit": "Напусти игру",
     "loading": "Учитавање...",
-    "reportError": "Пријави грешку"
+    "reportError": "Пријави грешку",
+    "previousScores": "Ваши претходни резултати:"
   },
   "countries": {
     "us": "Сједињене Америчке Државе",
