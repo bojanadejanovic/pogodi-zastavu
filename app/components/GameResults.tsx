@@ -115,11 +115,11 @@ export default function GameResults({ score, totalQuestions, onRestart }: GameRe
         {history.length > 0 && (
           <div className="mt-6 text-left">
             <div className="font-semibold mb-2">{t('ui.previousScores')}</div>
-            <ul className="space-y-1 text-sm">
+            <ul className="space-y-2 text-sm">
               {history.slice(0, 10).map((h, i) => (
-                <li key={i} className="flex justify-between">
-                  <span>{h.score}/{h.totalQuestions}</span>
-                  <span className="text-gray-400">{new Date(h.createdAt).toLocaleString()}</span>
+                <li key={i} className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="font-medium">{h.score}/{h.totalQuestions}</span>
+                  <span className="text-gray-400 text-xs sm:text-sm">{new Date(h.createdAt).toLocaleString()}</span>
                 </li>
               ))}
             </ul>
