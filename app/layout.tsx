@@ -18,7 +18,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script defer src="https://analytics.bitsandpieces.cloud/script.js" data-website-id="ed4fc46e-f9d0-44eb-a616-37ec3c9888d0"></script>
+      </head>
       <body className={inter.className}>
         <LanguageProvider>
           <main className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col pt-8 md:pt-12">
