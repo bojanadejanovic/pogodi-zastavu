@@ -9,9 +9,10 @@ interface GameResultsProps {
   score: number;
   totalQuestions: number;
   onRestart: () => void;
+  mode: 'world' | 'europe'; // Add mode prop
 }
 
-export default function GameResults({ score, totalQuestions, onRestart }: GameResultsProps) {
+export default function GameResults({ score, totalQuestions, onRestart, mode }: GameResultsProps) {
   const { t } = useLanguage();
   const percentage = Math.round((score / totalQuestions) * 100);
   
@@ -57,7 +58,8 @@ export default function GameResults({ score, totalQuestions, onRestart }: GameRe
     return "💪";
   };
 
-  const isPerfectScore = score >= 14;
+  // Show confetti for 14/15 or 15/15 in world mode, or 10/10 in europe mode
+  const isPerfectScore = (mode === 'world' && score >= 14) || (mode === 'europe' && score === 10);
 
   return (
     <div className="mt-4 max-w-2xl mx-auto p-8 bg-white rounded-lg shadow-lg text-center">

@@ -7,8 +7,10 @@ import GameResults from './components/GameResults';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import Footer from './components/Footer';
 import { getRandomQuestions, FlagQuestion as FlagQuestionType } from './data/flags';
+import { europe } from './data/europe';
 
 type GameState = 'start' | 'playing' | 'results';
+type GameMode = 'world' | 'europe';
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>('start');
@@ -16,6 +18,7 @@ export default function Home() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState<GameMode>('world');
 
   // Preload flag images
   const preloadImages = (questions: FlagQuestionType[]) => {
@@ -29,7 +32,12 @@ export default function Home() {
 
   const startGame = () => {
     setIsLoading(true);
-    const randomQuestions = getRandomQuestions(15);
+    let randomQuestions;
+    if (mode === 'europe') {
+      randomQuestions = getRandomQuestions(10, europe);
+    } else {
+      randomQuestions = getRandomQuestions(15);
+    }
     setQuestions(randomQuestions);
     setCurrentQuestionIndex(0);
     setScore(0);
@@ -67,7 +75,7 @@ export default function Home() {
       <LanguageSwitcher />
       <div className="container mx-auto flex-1">
         {gameState === 'start' && (
-          <GameStart onStartGame={startGame} isLoading={isLoading} />
+          <GameStart onStartGame={startGame} isLoading={isLoading} mode={mode} setMode={setMode} />
         )}
         
         {gameState === 'playing' && questions.length > 0 && (
@@ -85,6 +93,7 @@ export default function Home() {
             score={score}
             totalQuestions={questions.length}
             onRestart={restartGame}
+            mode={mode} // Pass mode to GameResults
           />
         )}
       </div>

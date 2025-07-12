@@ -84,5 +84,9 @@
     "sending": "Sending...",
     "success": "Report sent successfully! Thank you for your feedback.",
     "error": "Failed to send report. Please try again."
+  },
+  "mode": {
+    "world": "World",
+    "europe": "Europe"
   }
 }

@@ -5,9 +5,11 @@ import { useLanguage } from '../contexts/LanguageContext';
 interface GameStartProps {
   onStartGame: () => void;
   isLoading: boolean;
+  mode: 'world' | 'europe';
+  setMode: (mode: 'world' | 'europe') => void;
 }
 
-export default function GameStart({ onStartGame, isLoading }: GameStartProps) {
+export default function GameStart({ onStartGame, isLoading, mode, setMode }: GameStartProps) {
   const { t } = useLanguage();
 
   return (
@@ -29,6 +31,25 @@ export default function GameStart({ onStartGame, isLoading }: GameStartProps) {
           }}
         >
           <div className="max-w-2xl mx-auto p-8 bg-white rounded-lg shadow-lg text-center">
+            {/* Mode selector */}
+            <div className="flex justify-center mb-6 gap-4">
+              <button
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold border-2 transition-all duration-200 ${mode === 'world' ? 'bg-primary-500 text-white border-primary-500' : 'bg-white text-primary-500 border-primary-500 hover:bg-primary-50'}`}
+                onClick={() => setMode('world')}
+                disabled={isLoading}
+              >
+                <img src="/world.png" alt="World" className="w-5 h-5" />
+                {t('mode.world')}
+              </button>
+              <button
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold border-2 transition-all duration-200 ${mode === 'europe' ? 'bg-primary-500 text-white border-primary-500' : 'bg-white text-primary-500 border-primary-500 hover:bg-primary-50'}`}
+                onClick={() => setMode('europe')}
+                disabled={isLoading}
+              >
+                <img src="/europe.png" alt="Europe" className="w-5 h-5" />
+                {t('mode.europe')}
+              </button>
+            </div>
             <div className="mb-8">
               <div className="text-6xl mb-4">🏁</div>
               <h1 className="text-4xl font-bold text-gray-800 mb-4">
@@ -108,6 +129,25 @@ export default function GameStart({ onStartGame, isLoading }: GameStartProps) {
       {/* Mobile fallback: show content normally */}
       <div className="block md:hidden">
         <div className="max-w-2xl mx-auto p-8 bg-white rounded-lg shadow-lg text-center">
+          {/* Mode selector for mobile */}
+          <div className="flex justify-center mb-4 gap-4 md:hidden">
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold border-2 transition-all duration-200 ${mode === 'world' ? 'bg-primary-500 text-white border-primary-500' : 'bg-white text-primary-500 border-primary-500 hover:bg-primary-50'}`}
+              onClick={() => setMode('world')}
+              disabled={isLoading}
+            >
+              <img src="/world.png" alt="World" className="w-5 h-5" />
+              {t('mode.world')}
+            </button>
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold border-2 transition-all duration-200 ${mode === 'europe' ? 'bg-primary-500 text-white border-primary-500' : 'bg-white text-primary-500 border-primary-500 hover:bg-primary-50'}`}
+              onClick={() => setMode('europe')}
+              disabled={isLoading}
+            >
+              <img src="/europe.png" alt="Europe" className="w-5 h-5" />
+              {t('mode.europe')}
+            </button>
+          </div>
           <div className="mb-8">
             <div className="text-6xl mb-4">🏁</div>
             <h1 className="text-4xl font-bold text-gray-800 mb-4">

@@ -17,9 +17,9 @@ export function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-export function getRandomQuestions(count: number = 15): FlagQuestion[] {
+export function getRandomQuestions(count: number = 15, countryList: Country[] = countries): FlagQuestion[] {
   // Shuffle all countries and take the first 'count' as questions
-  const shuffledCountries = shuffleArray(countries);
+  const shuffledCountries = shuffleArray(countryList);
   const selectedCountries = shuffledCountries.slice(0, count);
   
   return selectedCountries.map((country, index) => {
