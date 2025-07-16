@@ -11,6 +11,9 @@ interface GameStartProps {
 
 export default function GameStart({ onStartGame, isLoading, mode, setMode }: GameStartProps) {
   const { t } = useLanguage();
+  
+  // Determine the number of questions based on mode
+  const questionCount = mode === 'europe' ? 10 : 15;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4 flex flex-col">
@@ -70,7 +73,7 @@ export default function GameStart({ onStartGame, isLoading, mode, setMode }: Gam
                   <div className="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold mr-3">
                     1
                   </div>
-                  <span className="text-gray-700">{t('instructions.step1')}</span>
+                  <span className="text-gray-700">{t('instructions.step1', { count: questionCount })}</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold mr-3">
@@ -168,7 +171,7 @@ export default function GameStart({ onStartGame, isLoading, mode, setMode }: Gam
                 <div className="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold mr-3">
                   1
                 </div>
-                <span className="text-gray-700">{t('instructions.step1')}</span>
+                <span className="text-gray-700">{t('instructions.step1', { count: questionCount })}</span>
               </div>
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold mr-3">
