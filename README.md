@@ -4,9 +4,9 @@ A fun and interactive flag guessing game built with Next.js, TypeScript, and Tai
 
 ## Features
 
-- 🏁 **Interactive Gameplay**: Answer 10 multiple choice questions about world flags
-- 🎯 **True Randomness**: Flags are randomly selected from a pool of over 200 countries
-- 📊 **Score Tracking**: Keep track of your correct answers
+- 🏁 **Interactive Gameplay**: Answer 15 questions in World mode or 10 questions in Europe mode
+- 🎯 **Two Game Modes**: Choose between World flags (200+ countries) or European flags only
+- 📊 **Score Tracking**: Persistent score history using PocketBase backend
 - 🎨 **Beautiful UI**: Modern, responsive design with smooth animations
 - 📱 **Mobile Friendly**: Works perfectly on all device sizes
 - 🔄 **Replayable**: Play again to improve your score
@@ -16,10 +16,10 @@ A fun and interactive flag guessing game built with Next.js, TypeScript, and Tai
 
 ## Game Flow
 
-1. **Start Screen**: Welcome page with game instructions
+1. **Start Screen**: Welcome page with game mode selection (World/Europe) and instructions
 2. **Question Screen**: Display flag image with 4 country options
 3. **Feedback**: Immediate visual feedback for correct/incorrect answers
-4. **Results Screen**: Final score with percentage and performance message
+4. **Results Screen**: Final score with percentage, performance message, and score history
 5. **Restart**: Option to play again with new random questions
 
 ## Countries Included
@@ -48,9 +48,14 @@ npm install
 yarn install
 ```
 
-3. Set up environment variables (optional, for error reporting):
+3. Set up environment variables:
 ```bash
 # Create .env.local file
+
+# Required for score tracking
+POCKETBASE_URL=your-pocketbase-url-here
+
+# Optional for error reporting
 MAILGUN_API_KEY=your-mailgun-api-key-here
 MAILGUN_DOMAIN=your-mailgun-domain.com
 REPORT_EMAIL=your-email@example.com
@@ -67,13 +72,32 @@ yarn dev
 
 ## Environment Variables
 
+### Required Variables
+
+- `POCKETBASE_URL`: Your PocketBase instance URL (e.g., `http://localhost:8090` or `https://your-pocketbase-domain.com`)
+
+### Optional Variables
+
 For error reporting functionality, you can set up the following environment variables:
 
 - `MAILGUN_API_KEY`: Your Mailgun API key
 - `MAILGUN_DOMAIN`: Your Mailgun domain
 - `REPORT_EMAIL`: Email address where error reports will be sent
 
-If these variables are not set, the error reporting feature will be disabled.
+If the Mailgun variables are not set, the error reporting feature will be disabled.
+
+## PocketBase Setup
+
+The game uses PocketBase for persistent score tracking. You'll need to set up a PocketBase instance:
+
+1. **Install PocketBase**: Download from [pocketbase.io](https://pocketbase.io/)
+2. **Start PocketBase**: Run `./pocketbase serve` in the PocketBase directory
+3. **Create Collection**: Create a `scores` collection with the following fields:
+   - `userId` (text, required)
+   - `score` (number, required)
+   - `totalQuestions` (number, required)
+   - `created` (date, auto-generated)
+4. **Set Environment Variable**: Add your PocketBase URL to `POCKETBASE_URL` in `.env.local`
 
 ## Project Structure
 
@@ -81,6 +105,8 @@ If these variables are not set, the error reporting feature will be disabled.
 pogodi-zastavu/
 ├── app/
 │   ├── api/
+│   │   ├── get-scores/       # Get user score history API endpoint
+│   │   ├── save-score/       # Save user score API endpoint
 │   │   └── report-error/     # Error reporting API endpoint
 │   ├── components/
 │   │   ├── Confetti.tsx      # Confetti animation component
@@ -93,8 +119,11 @@ pogodi-zastavu/
 │   ├── contexts/
 │   │   └── LanguageContext.tsx # Language context provider
 │   ├── data/
-│   │   ├── countries.ts      # Countries data
+│   │   ├── countries.ts      # World countries data
+│   │   ├── europe.ts         # European countries data
 │   │   └── flags.ts          # Flag questions logic
+│   ├── utils/
+│   │   └── user.ts           # User ID management utilities
 │   ├── globals.css           # Global styles
 │   ├── layout.tsx            # Root layout
 │   └── page.tsx              # Main game page
@@ -114,6 +143,7 @@ pogodi-zastavu/
 - **TypeScript**: Type-safe JavaScript
 - **Tailwind CSS**: Utility-first CSS framework
 - **React Hooks**: State management and side effects
+- **PocketBase**: Backend database for score tracking
 - **Mailgun**: Email service for error reporting
 - **Canvas Confetti**: Confetti animation library
 
@@ -127,9 +157,10 @@ pogodi-zastavu/
 
 ### Changing Game Settings
 
-- Modify `getRandomQuestions(10)` in `app/data/flags.ts` to change the number of questions
+- Modify question counts in `app/page.tsx` (currently 15 for World mode, 10 for Europe mode)
 - Update styling in component files or `tailwind.config.js`
 - Adjust timing in `FlagQuestion.tsx` for result display duration
+- Add new countries to `app/data/countries.ts` for World mode or `app/data/europe.ts` for Europe mode
 
 ## Error Reporting
 
@@ -150,6 +181,11 @@ npm start
 ```
 
 For Vercel deployment, make sure to set the environment variables in the Vercel dashboard.
+
+**Note**: You'll also need to deploy a PocketBase instance for score tracking functionality. You can use:
+- PocketBase Cloud (managed service)
+- Self-hosted PocketBase on any VPS
+- Local PocketBase for development
 
 ## Contributing
 
