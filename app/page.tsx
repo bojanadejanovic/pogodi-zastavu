@@ -22,9 +22,8 @@ export default function Home() {
 
   // Preload flag images
   const preloadImages = (questions: FlagQuestionType[]) => {
-    // Preload the first 3 flag images
-    const imagesToPreload = questions.slice(0, 3);
-    imagesToPreload.forEach(question => {
+    // Preload all flag images for faster transitions
+    questions.forEach(question => {
       const img = new Image();
       img.src = question.flagImage;
     });
@@ -47,7 +46,7 @@ export default function Home() {
       preloadImages(randomQuestions);
       setGameState('playing');
       setIsLoading(false);
-    }, 100);
+    }, 50); // Reduced from 100ms to 50ms
   };
 
   const handleAnswer = (isCorrect: boolean) => {

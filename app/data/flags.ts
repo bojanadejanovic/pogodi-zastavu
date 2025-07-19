@@ -18,14 +18,22 @@ export function shuffleArray<T>(array: T[]): T[] {
 }
 
 export function getRandomQuestions(count: number = 15, countryList: Country[] = countries): FlagQuestion[] {
-  // Shuffle all countries and take the first 'count' as questions
+  // Shuffle all countries once and take the first 'count' as questions
   const shuffledCountries = shuffleArray(countryList);
   const selectedCountries = shuffledCountries.slice(0, count);
   
+  // Pre-shuffle remaining countries for wrong answers to avoid repeated shuffling
+  const remainingCountries = shuffledCountries.slice(count);
+  const shuffledRemaining = shuffleArray(remainingCountries);
+  
   return selectedCountries.map((country, index) => {
-    // Get 3 random wrong answers from the remaining countries
-    const remainingCountries = shuffledCountries.slice(count);
-    const wrongAnswers = shuffleArray(remainingCountries).slice(0, 3);
+    // Get 3 random wrong answers from the pre-shuffled remaining countries
+    // Use modulo to cycle through if we run out of countries
+    const wrongAnswers = [];
+    for (let i = 0; i < 3; i++) {
+      const wrongIndex = (index * 3 + i) % shuffledRemaining.length;
+      wrongAnswers.push(shuffledRemaining[wrongIndex]);
+    }
     
     // Create options array with correct answer and 3 wrong answers
     const options = shuffleArray([country.code, ...wrongAnswers.map(c => c.code)]);

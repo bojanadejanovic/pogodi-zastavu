@@ -30,7 +30,20 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
     const img = new Image();
     img.onload = () => setImageLoaded(true);
     img.onerror = () => setImageError(true);
+    
+    // Set src after setting up event handlers for better performance
     img.src = question.flagImage;
+    
+    // Check if image is already cached (complete property indicates cached)
+    if (img.complete) {
+      setImageLoaded(true);
+    }
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
   }, [question.flagImage]);
 
   const handleAnswerSelect = (answer: string) => {
@@ -45,13 +58,13 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
     setIsAnswered(true);
     setShowResult(true);
     
-    // Show result for 2 seconds before moving to next question
+    // Show result for 1 second before moving to next question (reduced from 2 seconds)
     setTimeout(() => {
       onAnswer(isCorrect);
       setSelectedAnswer('');
       setIsAnswered(false);
       setShowResult(false);
-    }, 2000);
+    }, 1000);
   };
 
   const isCorrect = selectedAnswer === question.correctAnswer;
