@@ -97,5 +97,15 @@
   "mode": {
     "world": "World",
     "europe": "Europe"
+  },
+  "leaderboard": {
+    "title": "Top Scorers Today",
+    "subtitle": "See who's leading the flag guessing game today!",
+    "backToHome": "Back to Home",
+    "loading": "Loading leaderboard...",
+    "tryAgain": "Try Again",
+    "noScores": "No scores yet today",
+    "playToAppear": "Play the game and save your score with a name to appear here!",
+    "footer": "Only scores with names are shown on the leaderboard"
   }
 }

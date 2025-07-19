@@ -66,6 +66,16 @@ export default function GameStart({ onStartGame, isLoading, mode, setMode }: Gam
               </p>
             </div>
 
+            {/* Leaderboard link */}
+            <div className="mb-6">
+              <a
+                href="/leaderboard"
+                className="inline-flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transform hover:scale-105 transition-all duration-200 shadow-lg"
+              >
+                🏆 {t('leaderboard.title')}
+              </a>
+            </div>
+
             <div className="bg-gradient-to-r from-primary-50 to-blue-50 p-6 rounded-lg mb-8">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">{t('instructions.title')}</h2>
               <div className="space-y-3 text-left">
@@ -162,6 +172,16 @@ export default function GameStart({ onStartGame, isLoading, mode, setMode }: Gam
             <p className="text-lg text-gray-500">
               {t('game.description')}
             </p>
+          </div>
+
+          {/* Leaderboard link */}
+          <div className="mb-6">
+            <a
+              href="/leaderboard"
+              className="inline-flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transform hover:scale-105 transition-all duration-200 shadow-lg"
+            >
+              🏆 {t('leaderboard.title')}
+            </a>
           </div>
 
           <div className="bg-gradient-to-r from-primary-50 to-blue-50 p-6 rounded-lg mb-8">

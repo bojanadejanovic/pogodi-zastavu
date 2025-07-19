@@ -8,11 +8,13 @@ import LanguageSwitcher from './components/LanguageSwitcher';
 import Footer from './components/Footer';
 import { getRandomQuestions, FlagQuestion as FlagQuestionType } from './data/flags';
 import { europe } from './data/europe';
+import { useLanguage } from './contexts/LanguageContext';
 
 type GameState = 'start' | 'playing' | 'results';
 type GameMode = 'world' | 'europe';
 
 export default function Home() {
+  const { t } = useLanguage();
   const [gameState, setGameState] = useState<GameState>('start');
   const [questions, setQuestions] = useState<FlagQuestionType[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
