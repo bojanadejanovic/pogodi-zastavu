@@ -36,7 +36,16 @@
     "quit": "Quit Game",
     "loading": "Loading...",
     "reportError": "Report an error",
-    "previousScores": "Your Previous Scores:"
+    "previousScores": "Your Previous Scores:",
+    "saveScore": "Save Score",
+    "saveScoreWithName": "Save Score with Name",
+    "nameLabel": "Your Name (optional)",
+    "namePlaceholder": "Enter your name for leaderboard",
+    "saveScoreDescription": "Save your score to compete on the leaderboard",
+    "skipSaving": "Skip",
+    "saving": "Saving...",
+    "scoreSaved": "Score saved successfully!",
+    "scoreSaveError": "Failed to save score. Please try again."
   },
   "countries": {
     "us": "United States",

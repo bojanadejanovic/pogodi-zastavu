@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
     score: r.score,
     totalQuestions: r.totalQuestions,
     createdAt: r.created,
+    name: r.name || null,
   }));
   return NextResponse.json({ scores });
 }
