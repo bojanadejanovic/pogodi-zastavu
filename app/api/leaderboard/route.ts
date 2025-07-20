@@ -7,11 +7,11 @@ export async function GET() {
     // Get today's date in UTC (start of day) to ensure consistency across environments
     const now = new Date();
     const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-    const todayISO = today.toISOString();
+    const todayISO = today.toISOString().replace('T', ' ').replace('.000Z', '');
     
     // Get tomorrow's date in UTC (end of day)
     const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
-    const tomorrowISO = tomorrow.toISOString();
+    const tomorrowISO = tomorrow.toISOString().replace('T', ' ').replace('.000Z', '');
 
     // Debug logging
     console.log('Leaderboard API Debug:', {
@@ -21,10 +21,10 @@ export async function GET() {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     });
 
-    // Get all recent scores with names from all users (global leaderboard)
-    const allScoresRes = await fetch(
-      `${POCKETBASE_URL}/api/collections/scores/records?filter=name != ""&sort=-created&perPage=50`
-    );
+    // Get all scores from today, then filter for those with names
+    const todayFilter = `created >= "${todayISO}" && created < "${tomorrowISO}"`;
+    const searchQuery = `${POCKETBASE_URL}/api/collections/scores/records?filter=${todayFilter}&sort=-score,-created&perPage=50`
+    const allScoresRes = await fetch(searchQuery);
 
     if (!allScoresRes.ok) {
       const error = await allScoresRes.json();
@@ -34,13 +34,15 @@ export async function GET() {
 
     const allScoresData = await allScoresRes.json();
     
-    // Debug logging for all scores (global leaderboard)
+    // Debug logging for all scores from today
     const uniqueUsers = allScoresData.items?.reduce((acc: any, item: any) => {
-      acc[item.name] = true;
+      if (item.name && item.name.trim() !== '') {
+        acc[item.name] = true;
+      }
       return acc;
     }, {}) || {};
     
-    console.log('All scores with names (global):', {
+    console.log('All scores from today:', {
       totalItems: allScoresData.items?.length || 0,
       uniqueUsers: Object.keys(uniqueUsers).length,
       items: allScoresData.items?.map((item: any) => ({
@@ -52,30 +54,25 @@ export async function GET() {
       })) || []
     });
 
-    // Filter scores for today on the server side - using simpler date comparison
-    const todayScores = allScoresData.items.filter((item: any) => {
-      const createdDate = new Date(item.created);
-      const createdDateString = createdDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-      const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
-      
-      const isToday = createdDateString === todayString;
+    // Filter scores that have names (all scores from today are already fetched)
+    const scoresWithNames = allScoresData.items.filter((item: any) => {
+      const hasName = item.name && item.name.trim() !== '';
       
       // Debug each item
       console.log('Checking item:', {
         id: item.id,
         name: item.name,
+        score: item.score,
         created: item.created,
-        createdDateString,
-        todayString,
-        isToday
+        hasName
       });
       
-      return isToday;
+      return hasName;
     });
 
-    console.log('Filtered today scores:', {
-      totalToday: todayScores.length,
-      items: todayScores.map((item: any) => ({
+    console.log('Scores with names:', {
+      totalWithNames: scoresWithNames.length,
+      items: scoresWithNames.map((item: any) => ({
         id: item.id,
         name: item.name,
         score: item.score,
@@ -84,7 +81,7 @@ export async function GET() {
     });
 
     // Sort by score (highest first), then by creation time (earliest first for tiebreakers)
-    const sortedScores = todayScores.sort((a: any, b: any) => {
+    const sortedScores = scoresWithNames.sort((a: any, b: any) => {
       if (b.score !== a.score) {
         return b.score - a.score;
       }
@@ -95,7 +92,7 @@ export async function GET() {
     const topScores = sortedScores.slice(0, 5);
     
     console.log('Final results:', {
-      totalToday: todayScores.length,
+      totalWithNames: scoresWithNames.length,
       sortedScores: sortedScores.map((s: any) => ({ id: s.id, name: s.name, score: s.score })),
       topScores: topScores.map((s: any) => ({ id: s.id, name: s.name, score: s.score }))
     });
