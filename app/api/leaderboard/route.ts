@@ -21,9 +21,9 @@ export async function GET() {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     });
 
-    // First, let's get all recent scores with names to debug the issue
+    // Get all recent scores with names from all users (global leaderboard)
     const allScoresRes = await fetch(
-      `${POCKETBASE_URL}/api/collections/scores/records?filter=name != ""&sort=-created&perPage=20`
+      `${POCKETBASE_URL}/api/collections/scores/records?filter=name != ""&sort=-created&perPage=50`
     );
 
     if (!allScoresRes.ok) {
@@ -34,9 +34,15 @@ export async function GET() {
 
     const allScoresData = await allScoresRes.json();
     
-    // Debug logging for all scores
-    console.log('All scores with names:', {
+    // Debug logging for all scores (global leaderboard)
+    const uniqueUsers = allScoresData.items?.reduce((acc: any, item: any) => {
+      acc[item.name] = true;
+      return acc;
+    }, {}) || {};
+    
+    console.log('All scores with names (global):', {
       totalItems: allScoresData.items?.length || 0,
+      uniqueUsers: Object.keys(uniqueUsers).length,
       items: allScoresData.items?.map((item: any) => ({
         id: item.id,
         name: item.name,
@@ -46,11 +52,25 @@ export async function GET() {
       })) || []
     });
 
-    // Filter scores for today on the server side
+    // Filter scores for today on the server side - using simpler date comparison
     const todayScores = allScoresData.items.filter((item: any) => {
       const createdDate = new Date(item.created);
-      const createdDateUTC = new Date(Date.UTC(createdDate.getUTCFullYear(), createdDate.getUTCMonth(), createdDate.getUTCDate(), 0, 0, 0, 0));
-      return createdDateUTC >= today && createdDateUTC < tomorrow;
+      const createdDateString = createdDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      const isToday = createdDateString === todayString;
+      
+      // Debug each item
+      console.log('Checking item:', {
+        id: item.id,
+        name: item.name,
+        created: item.created,
+        createdDateString,
+        todayString,
+        isToday
+      });
+      
+      return isToday;
     });
 
     console.log('Filtered today scores:', {
@@ -73,6 +93,12 @@ export async function GET() {
 
     // Take top 5
     const topScores = sortedScores.slice(0, 5);
+    
+    console.log('Final results:', {
+      totalToday: todayScores.length,
+      sortedScores: sortedScores.map((s: any) => ({ id: s.id, name: s.name, score: s.score })),
+      topScores: topScores.map((s: any) => ({ id: s.id, name: s.name, score: s.score }))
+    });
     
     // Transform the data to include percentage and format properly
     const leaderboard = topScores.map((item: any) => ({
