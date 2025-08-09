@@ -1,260 +1,90 @@
 export interface Country {
-    code: string;
-    nameEn: string;
-    nameSr: string;
-    flagFile: string;
+  code: string;
+  nameEn: string;
+  nameSr: string;
+  flagFile: string;
+  continent?: string; // Optional for backward compatibility
+}
+
+export type Continent = 'Europe' | 'North America' | 'South America' | 'Africa' | 'Asia' | 'Australia';
+
+// Fallback static data (smaller subset for initial compatibility)
+const fallbackCountries: Country[] = [
+  { code: 'us', nameEn: 'United States', nameSr: 'Сједињене Америчке Државе', flagFile: 'us.svg', continent: 'North America' },
+  { code: 'fr', nameEn: 'France', nameSr: 'Француска', flagFile: 'fr.svg', continent: 'Europe' },
+  { code: 'de', nameEn: 'Germany', nameSr: 'Немачка', flagFile: 'de.svg', continent: 'Europe' },
+  { code: 'it', nameEn: 'Italy', nameSr: 'Италија', flagFile: 'it.svg', continent: 'Europe' },
+  { code: 'es', nameEn: 'Spain', nameSr: 'Шпанија', flagFile: 'es.svg', continent: 'Europe' },
+  { code: 'gb', nameEn: 'United Kingdom', nameSr: 'Уједињено Краљевство', flagFile: 'gb.svg', continent: 'Europe' },
+  { code: 'ca', nameEn: 'Canada', nameSr: 'Канада', flagFile: 'ca.svg', continent: 'North America' },
+  { code: 'au', nameEn: 'Australia', nameSr: 'Аустралија', flagFile: 'au.svg', continent: 'Australia' },
+  { code: 'br', nameEn: 'Brazil', nameSr: 'Бразил', flagFile: 'br.svg', continent: 'South America' },
+  { code: 'cn', nameEn: 'China', nameSr: 'Кина', flagFile: 'cn.svg', continent: 'Asia' },
+  { code: 'jp', nameEn: 'Japan', nameSr: 'Јапан', flagFile: 'jp.svg', continent: 'Asia' },
+  { code: 'kr', nameEn: 'South Korea', nameSr: 'Јужна Кореја', flagFile: 'kr.svg', continent: 'Asia' },
+  { code: 'in', nameEn: 'India', nameSr: 'Индија', flagFile: 'in.svg', continent: 'Asia' },
+  { code: 'ru', nameEn: 'Russia', nameSr: 'Русија', flagFile: 'ru.svg', continent: 'Europe' },
+  { code: 'mx', nameEn: 'Mexico', nameSr: 'Мексико', flagFile: 'mx.svg', continent: 'North America' },
+  { code: 'ar', nameEn: 'Argentina', nameSr: 'Аргентина', flagFile: 'ar.svg', continent: 'South America' },
+  { code: 'za', nameEn: 'South Africa', nameSr: 'Јужна Африка', flagFile: 'za.svg', continent: 'Africa' },
+  { code: 'eg', nameEn: 'Egypt', nameSr: 'Египат', flagFile: 'eg.svg', continent: 'Africa' },
+  { code: 'ng', nameEn: 'Nigeria', nameSr: 'Нигерија', flagFile: 'ng.svg', continent: 'Africa' },
+  { code: 'rs', nameEn: 'Serbia', nameSr: 'Србија', flagFile: 'rs.svg', continent: 'Europe' },
+];
+
+// Cache for countries data
+let countriesCache: Country[] | null = null;
+let europeCache: Country[] | null = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Service to fetch countries from PocketBase API with fallback
+export async function fetchCountries(continent?: string): Promise<Country[]> {
+  try {
+    // Check cache first
+    const now = Date.now();
+    if (countriesCache && now - lastFetchTime < CACHE_DURATION) {
+      if (continent) {
+        return countriesCache.filter(c => c.continent === continent);
+      }
+      return countriesCache;
+    }
+
+    let url = '/api/countries';
+    if (continent) {
+      url += `?continent=${encodeURIComponent(continent)}`;
+    }
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Failed to fetch countries');
+    }
+    
+    const data = await response.json();
+    const countries = data.countries || [];
+    
+    // Update cache if we got all countries
+    if (!continent && countries.length > 0) {
+      countriesCache = countries;
+      lastFetchTime = now;
+    }
+    
+    return countries;
+  } catch (error) {
+    console.error('Error fetching countries from API, using fallback:', error);
+    
+    // Return fallback data filtered by continent if specified
+    if (continent) {
+      return fallbackCountries.filter(c => c.continent === continent);
+    }
+    return fallbackCountries;
   }
-  
-  // Comprehensive list of countries with their ISO codes and names (deduplicated)
-  export const countries: Country[] = [
-    { code: 'us', nameEn: 'United States', nameSr: 'Сједињене Америчке Државе', flagFile: 'us.svg' },
-    { code: 'fr', nameEn: 'France', nameSr: 'Француска', flagFile: 'fr.svg' },
-    { code: 'de', nameEn: 'Germany', nameSr: 'Немачка', flagFile: 'de.svg' },
-    { code: 'it', nameEn: 'Italy', nameSr: 'Италија', flagFile: 'it.svg' },
-    { code: 'es', nameEn: 'Spain', nameSr: 'Шпанија', flagFile: 'es.svg' },
-    { code: 'gb', nameEn: 'United Kingdom', nameSr: 'Уједињено Краљевство', flagFile: 'gb.svg' },
-    { code: 'ca', nameEn: 'Canada', nameSr: 'Канада', flagFile: 'ca.svg' },
-    { code: 'au', nameEn: 'Australia', nameSr: 'Аустралија', flagFile: 'au.svg' },
-    { code: 'br', nameEn: 'Brazil', nameSr: 'Бразил', flagFile: 'br.svg' },
-    { code: 'cn', nameEn: 'China', nameSr: 'Кина', flagFile: 'cn.svg' },
-    { code: 'jp', nameEn: 'Japan', nameSr: 'Јапан', flagFile: 'jp.svg' },
-    { code: 'kr', nameEn: 'South Korea', nameSr: 'Јужна Кореја', flagFile: 'kr.svg' },
-    { code: 'in', nameEn: 'India', nameSr: 'Индија', flagFile: 'in.svg' },
-    { code: 'ru', nameEn: 'Russia', nameSr: 'Русија', flagFile: 'ru.svg' },
-    { code: 'mx', nameEn: 'Mexico', nameSr: 'Мексико', flagFile: 'mx.svg' },
-    { code: 'ar', nameEn: 'Argentina', nameSr: 'Аргентина', flagFile: 'ar.svg' },
-    { code: 'cl', nameEn: 'Chile', nameSr: 'Чиле', flagFile: 'cl.svg' },
-    { code: 'co', nameEn: 'Colombia', nameSr: 'Колумбија', flagFile: 'co.svg' },
-    { code: 'pe', nameEn: 'Peru', nameSr: 'Перу', flagFile: 'pe.svg' },
-    { code: 've', nameEn: 'Venezuela', nameSr: 'Венецуела', flagFile: 've.svg' },
-    { code: 'at', nameEn: 'Austria', nameSr: 'Аустрија', flagFile: 'at.svg' },
-    { code: 'ch', nameEn: 'Switzerland', nameSr: 'Швајцарска', flagFile: 'ch.svg' },
-    { code: 'nl', nameEn: 'Netherlands', nameSr: 'Холандија', flagFile: 'nl.svg' },
-    { code: 'be', nameEn: 'Belgium', nameSr: 'Белгија', flagFile: 'be.svg' },
-    { code: 'pt', nameEn: 'Portugal', nameSr: 'Португалија', flagFile: 'pt.svg' },
-    { code: 'gr', nameEn: 'Greece', nameSr: 'Грчка', flagFile: 'gr.svg' },
-    { code: 'se', nameEn: 'Sweden', nameSr: 'Шведска', flagFile: 'se.svg' },
-    { code: 'no', nameEn: 'Norway', nameSr: 'Норвешка', flagFile: 'no.svg' },
-    { code: 'dk', nameEn: 'Denmark', nameSr: 'Данска', flagFile: 'dk.svg' },
-    { code: 'fi', nameEn: 'Finland', nameSr: 'Финска', flagFile: 'fi.svg' },
-    { code: 'pl', nameEn: 'Poland', nameSr: 'Пољска', flagFile: 'pl.svg' },
-    { code: 'cz', nameEn: 'Czech Republic', nameSr: 'Чешка', flagFile: 'cz.svg' },
-    { code: 'hu', nameEn: 'Hungary', nameSr: 'Мађарска', flagFile: 'hu.svg' },
-    { code: 'ro', nameEn: 'Romania', nameSr: 'Румунија', flagFile: 'ro.svg' },
-    { code: 'bg', nameEn: 'Bulgaria', nameSr: 'Бугарска', flagFile: 'bg.svg' },
-    { code: 'hr', nameEn: 'Croatia', nameSr: 'Хрватска', flagFile: 'hr.svg' },
-    { code: 'rs', nameEn: 'Serbia', nameSr: 'Србија', flagFile: 'rs.svg' },
-    { code: 'si', nameEn: 'Slovenia', nameSr: 'Словенија', flagFile: 'si.svg' },
-    { code: 'sk', nameEn: 'Slovakia', nameSr: 'Словачка', flagFile: 'sk.svg' },
-    { code: 'ee', nameEn: 'Estonia', nameSr: 'Естонија', flagFile: 'ee.svg' },
-    { code: 'lv', nameEn: 'Latvia', nameSr: 'Летонија', flagFile: 'lv.svg' },
-    { code: 'lt', nameEn: 'Lithuania', nameSr: 'Литванија', flagFile: 'lt.svg' },
-    { code: 'ie', nameEn: 'Ireland', nameSr: 'Ирска', flagFile: 'ie.svg' },
-    { code: 'nz', nameEn: 'New Zealand', nameSr: 'Нови Зеланд', flagFile: 'nz.svg' },
-    { code: 'za', nameEn: 'South Africa', nameSr: 'Јужна Африка', flagFile: 'za.svg' },
-    { code: 'eg', nameEn: 'Egypt', nameSr: 'Египат', flagFile: 'eg.svg' },
-    { code: 'ng', nameEn: 'Nigeria', nameSr: 'Нигерија', flagFile: 'ng.svg' },
-    { code: 'ke', nameEn: 'Kenya', nameSr: 'Кенија', flagFile: 'ke.svg' },
-    { code: 'ma', nameEn: 'Morocco', nameSr: 'Мароко', flagFile: 'ma.svg' },
-    { code: 'tr', nameEn: 'Turkey', nameSr: 'Турска', flagFile: 'tr.svg' },
-    { code: 'ir', nameEn: 'Iran', nameSr: 'Иран', flagFile: 'ir.svg' },
-    { code: 'sa', nameEn: 'Saudi Arabia', nameSr: 'Саудијска Арабија', flagFile: 'sa.svg' },
-    { code: 'ae', nameEn: 'United Arab Emirates', nameSr: 'Уједињени Арапски Емирати', flagFile: 'ae.svg' },
-    { code: 'il', nameEn: 'Israel', nameSr: 'Израел', flagFile: 'il.svg' },
-    { code: 'th', nameEn: 'Thailand', nameSr: 'Тајланд', flagFile: 'th.svg' },
-    { code: 'vn', nameEn: 'Vietnam', nameSr: 'Вијетнам', flagFile: 'vn.svg' },
-    { code: 'my', nameEn: 'Malaysia', nameSr: 'Малезија', flagFile: 'my.svg' },
-    { code: 'sg', nameEn: 'Singapore', nameSr: 'Сингапур', flagFile: 'sg.svg' },
-    { code: 'ph', nameEn: 'Philippines', nameSr: 'Филипини', flagFile: 'ph.svg' },
-    { code: 'id', nameEn: 'Indonesia', nameSr: 'Индонезија', flagFile: 'id.svg' },
-    { code: 'pk', nameEn: 'Pakistan', nameSr: 'Пакистан', flagFile: 'pk.svg' },
-    { code: 'bd', nameEn: 'Bangladesh', nameSr: 'Бангладеш', flagFile: 'bd.svg' },
-    { code: 'lk', nameEn: 'Sri Lanka', nameSr: 'Шри Ланка', flagFile: 'lk.svg' },
-    { code: 'np', nameEn: 'Nepal', nameSr: 'Непал', flagFile: 'np.svg' },
-    { code: 'mm', nameEn: 'Myanmar', nameSr: 'Мјанмар', flagFile: 'mm.svg' },
-    { code: 'kh', nameEn: 'Cambodia', nameSr: 'Камбоџа', flagFile: 'kh.svg' },
-    { code: 'la', nameEn: 'Laos', nameSr: 'Лаос', flagFile: 'la.svg' },
-    { code: 'mn', nameEn: 'Mongolia', nameSr: 'Монголија', flagFile: 'mn.svg' },
-    { code: 'kz', nameEn: 'Kazakhstan', nameSr: 'Казахстан', flagFile: 'kz.svg' },
-    { code: 'uz', nameEn: 'Uzbekistan', nameSr: 'Узбекистан', flagFile: 'uz.svg' },
-    { code: 'kg', nameEn: 'Kyrgyzstan', nameSr: 'Киргистан', flagFile: 'kg.svg' },
-    { code: 'tj', nameEn: 'Tajikistan', nameSr: 'Таџикистан', flagFile: 'tj.svg' },
-    { code: 'tm', nameEn: 'Turkmenistan', nameSr: 'Туркменистан', flagFile: 'tm.svg' },
-    { code: 'az', nameEn: 'Azerbaijan', nameSr: 'Азербејџан', flagFile: 'az.svg' },
-    { code: 'ge', nameEn: 'Georgia', nameSr: 'Грузија', flagFile: 'ge.svg' },
-    { code: 'am', nameEn: 'Armenia', nameSr: 'Јерменија', flagFile: 'am.svg' },
-    { code: 'by', nameEn: 'Belarus', nameSr: 'Белорусија', flagFile: 'by.svg' },
-    { code: 'ua', nameEn: 'Ukraine', nameSr: 'Украјина', flagFile: 'ua.svg' },
-    { code: 'md', nameEn: 'Moldova', nameSr: 'Молдавија', flagFile: 'md.svg' },
-    { code: 'al', nameEn: 'Albania', nameSr: 'Албанија', flagFile: 'al.svg' },
-    { code: 'mk', nameEn: 'North Macedonia', nameSr: 'Северна Македонија', flagFile: 'mk.svg' },
-    { code: 'me', nameEn: 'Montenegro', nameSr: 'Црна Гора', flagFile: 'me.svg' },
-    { code: 'ba', nameEn: 'Bosnia and Herzegovina', nameSr: 'Босна и Херцеговина', flagFile: 'ba.svg' },
-    { code: 'mt', nameEn: 'Malta', nameSr: 'Малта', flagFile: 'mt.svg' },
-    { code: 'cy', nameEn: 'Cyprus', nameSr: 'Кипар', flagFile: 'cy.svg' },
-    { code: 'is', nameEn: 'Iceland', nameSr: 'Исланд', flagFile: 'is.svg' },
-    { code: 'lu', nameEn: 'Luxembourg', nameSr: 'Луксембург', flagFile: 'lu.svg' },
-    { code: 'li', nameEn: 'Liechtenstein', nameSr: 'Лихтенштајн', flagFile: 'li.svg' },
-    { code: 'mc', nameEn: 'Monaco', nameSr: 'Монако', flagFile: 'mc.svg' },
-    { code: 'ad', nameEn: 'Andorra', nameSr: 'Андора', flagFile: 'ad.svg' },
-    { code: 'sm', nameEn: 'San Marino', nameSr: 'Сан Марино', flagFile: 'sm.svg' },
-    { code: 'va', nameEn: 'Vatican City', nameSr: 'Ватикан', flagFile: 'va.svg' },
-    { code: 'fj', nameEn: 'Fiji', nameSr: 'Фиџи', flagFile: 'fj.svg' },
-    { code: 'pg', nameEn: 'Papua New Guinea', nameSr: 'Папуа Нова Гвинеја', flagFile: 'pg.svg' },
-    { code: 'sb', nameEn: 'Solomon Islands', nameSr: 'Соломонска Острва', flagFile: 'sb.svg' },
-    { code: 'vu', nameEn: 'Vanuatu', nameSr: 'Вануату', flagFile: 'vu.svg' },
-    { code: 'nc', nameEn: 'New Caledonia', nameSr: 'Нова Каледонија', flagFile: 'nc.svg' },
-    { code: 'pf', nameEn: 'French Polynesia', nameSr: 'Француска Полинезија', flagFile: 'pf.svg' },
-    { code: 'ws', nameEn: 'Samoa', nameSr: 'Самоа', flagFile: 'ws.svg' },
-    { code: 'to', nameEn: 'Tonga', nameSr: 'Тонга', flagFile: 'to.svg' },
-    { code: 'ki', nameEn: 'Kiribati', nameSr: 'Кирибати', flagFile: 'ki.svg' },
-    { code: 'tv', nameEn: 'Tuvalu', nameSr: 'Тувалу', flagFile: 'tv.svg' },
-    { code: 'nr', nameEn: 'Nauru', nameSr: 'Науру', flagFile: 'nr.svg' },
-    { code: 'pw', nameEn: 'Palau', nameSr: 'Палау', flagFile: 'pw.svg' },
-    { code: 'fm', nameEn: 'Micronesia', nameSr: 'Микронезија', flagFile: 'fm.svg' },
-    { code: 'mh', nameEn: 'Marshall Islands', nameSr: 'Маршалска Острва', flagFile: 'mh.svg' },
-    { code: 'ck', nameEn: 'Cook Islands', nameSr: 'Кукова Острва', flagFile: 'ck.svg' },
-    { code: 'nu', nameEn: 'Niue', nameSr: 'Нијуе', flagFile: 'nu.svg' },
-    { code: 'tk', nameEn: 'Tokelau', nameSr: 'Токелау', flagFile: 'tk.svg' },
-    { code: 'aw', nameEn: 'Aruba', nameSr: 'Аруба', flagFile: 'aw.svg' },
-    { code: 'cw', nameEn: 'Curaçao', nameSr: 'Курасао', flagFile: 'cw.svg' },
-    { code: 'sx', nameEn: 'Sint Maarten', nameSr: 'Свети Мартин', flagFile: 'sx.svg' },
-    { code: 'bl', nameEn: 'Saint Barthélemy', nameSr: 'Свети Бартоломеј', flagFile: 'bl.svg' },
-    { code: 'mf', nameEn: 'Saint Martin', nameSr: 'Свети Мартин', flagFile: 'mf.svg' },
-    { code: 'gp', nameEn: 'Guadeloupe', nameSr: 'Гваделуп', flagFile: 'gp.svg' },
-    { code: 'mq', nameEn: 'Martinique', nameSr: 'Мартиник', flagFile: 'mq.svg' },
-    { code: 'gf', nameEn: 'French Guiana', nameSr: 'Француска Гвајана', flagFile: 'gf.svg' },
-    { code: 're', nameEn: 'Réunion', nameSr: 'Реинион', flagFile: 're.svg' },
-    { code: 'yt', nameEn: 'Mayotte', nameSr: 'Мајот', flagFile: 'yt.svg' },
-    { code: 'pm', nameEn: 'Saint Pierre and Miquelon', nameSr: 'Свети Пјер и Микелон', flagFile: 'pm.svg' },
-    { code: 'wf', nameEn: 'Wallis and Futuna', nameSr: 'Валис и Футуна', flagFile: 'wf.svg' },
-    { code: 'tf', nameEn: 'French Southern Territories', nameSr: 'Француске Јужне Територије', flagFile: 'tf.svg' },
-    { code: 'bv', nameEn: 'Bouvet Island', nameSr: 'Буве Острво', flagFile: 'bv.svg' },
-    { code: 'hm', nameEn: 'Heard and McDonald Islands', nameSr: 'Херд и Макдоналд Острва', flagFile: 'hm.svg' },
-    { code: 'aq', nameEn: 'Antarctica', nameSr: 'Антарктик', flagFile: 'aq.svg' },
-    { code: 'gs', nameEn: 'South Georgia and South Sandwich Islands', nameSr: 'Јужна Џорџија и Јужна Сендвичка Острва', flagFile: 'gs.svg' },
-    { code: 'fk', nameEn: 'Falkland Islands', nameSr: 'Фокландска Острва', flagFile: 'fk.svg' },
-    { code: 'gi', nameEn: 'Gibraltar', nameSr: 'Гибралтар', flagFile: 'gi.svg' },
-    { code: 'bm', nameEn: 'Bermuda', nameSr: 'Бермуда', flagFile: 'bm.svg' },
-    { code: 'tc', nameEn: 'Turks and Caicos Islands', nameSr: 'Туркс и Кајкос Острва', flagFile: 'tc.svg' },
-    { code: 'vg', nameEn: 'British Virgin Islands', nameSr: 'Британска Девичанска Острва', flagFile: 'vg.svg' },
-    { code: 'ai', nameEn: 'Anguilla', nameSr: 'Ангила', flagFile: 'ai.svg' },
-    { code: 'ms', nameEn: 'Montserrat', nameSr: 'Монтсерат', flagFile: 'ms.svg' },
-    { code: 'ky', nameEn: 'Cayman Islands', nameSr: 'Кајманска Острва', flagFile: 'ky.svg' },
-    { code: 'bb', nameEn: 'Barbados', nameSr: 'Барбадос', flagFile: 'bb.svg' },
-    { code: 'gd', nameEn: 'Grenada', nameSr: 'Гренада', flagFile: 'gd.svg' },
-    { code: 'lc', nameEn: 'Saint Lucia', nameSr: 'Света Луција', flagFile: 'lc.svg' },
-    { code: 'vc', nameEn: 'Saint Vincent and the Grenadines', nameSr: 'Свети Винсент и Гренадини', flagFile: 'vc.svg' },
-    { code: 'ag', nameEn: 'Antigua and Barbuda', nameSr: 'Антигва и Барбуда', flagFile: 'ag.svg' },
-    { code: 'kn', nameEn: 'Saint Kitts and Nevis', nameSr: 'Свети Китс и Невис', flagFile: 'kn.svg' },
-    { code: 'dm', nameEn: 'Dominica', nameSr: 'Доминика', flagFile: 'dm.svg' },
-    { code: 'jm', nameEn: 'Jamaica', nameSr: 'Јамајка', flagFile: 'jm.svg' },
-    { code: 'ht', nameEn: 'Haiti', nameSr: 'Хаити', flagFile: 'ht.svg' },
-    { code: 'do', nameEn: 'Dominican Republic', nameSr: 'Доминиканска Република', flagFile: 'do.svg' },
-    { code: 'pr', nameEn: 'Puerto Rico', nameSr: 'Порторико', flagFile: 'pr.svg' },
-    { code: 'cu', nameEn: 'Cuba', nameSr: 'Куба', flagFile: 'cu.svg' },
-    { code: 'bs', nameEn: 'Bahamas', nameSr: 'Бахами', flagFile: 'bs.svg' },
-    { code: 'bz', nameEn: 'Belize', nameSr: 'Белизе', flagFile: 'bz.svg' },
-    { code: 'gt', nameEn: 'Guatemala', nameSr: 'Гватемала', flagFile: 'gt.svg' },
-    { code: 'sv', nameEn: 'El Salvador', nameSr: 'Ел Салвадор', flagFile: 'sv.svg' },
-    { code: 'hn', nameEn: 'Honduras', nameSr: 'Хондурас', flagFile: 'hn.svg' },
-    { code: 'ni', nameEn: 'Nicaragua', nameSr: 'Никарагва', flagFile: 'ni.svg' },
-    { code: 'cr', nameEn: 'Costa Rica', nameSr: 'Костарика', flagFile: 'cr.svg' },
-    { code: 'pa', nameEn: 'Panama', nameSr: 'Панама', flagFile: 'pa.svg' },
-    { code: 'uy', nameEn: 'Uruguay', nameSr: 'Уругвај', flagFile: 'uy.svg' },
-    { code: 'py', nameEn: 'Paraguay', nameSr: 'Парагвај', flagFile: 'py.svg' },
-    { code: 'bo', nameEn: 'Bolivia', nameSr: 'Боливија', flagFile: 'bo.svg' },
-    { code: 'ec', nameEn: 'Ecuador', nameSr: 'Еквадор', flagFile: 'ec.svg' },
-    { code: 'gy', nameEn: 'Guyana', nameSr: 'Гвајана', flagFile: 'gy.svg' },
-    { code: 'io', nameEn: 'British Indian Ocean Territory', nameSr: 'Британска Индијска Океанска Територија', flagFile: 'io.svg' },
-    { code: 'sh', nameEn: 'Saint Helena', nameSr: 'Света Хелена', flagFile: 'sh.svg' },
-    { code: 'ac', nameEn: 'Ascension Island', nameSr: 'Острво Узнесења', flagFile: 'ac.svg' },
-    { code: 'ta', nameEn: 'Tristan da Cunha', nameSr: 'Тристан да Куња', flagFile: 'ta.svg' },
-    { code: 'cv', nameEn: 'Cape Verde', nameSr: 'Зеленортска Острва', flagFile: 'cv.svg' },
-    { code: 'gw', nameEn: 'Guinea-Bissau', nameSr: 'Гвинеја Бисао', flagFile: 'gw.svg' },
-    { code: 'gn', nameEn: 'Guinea', nameSr: 'Гвинеја', flagFile: 'gn.svg' },
-    { code: 'sl', nameEn: 'Sierra Leone', nameSr: 'Сијера Леоне', flagFile: 'sl.svg' },
-    { code: 'lr', nameEn: 'Liberia', nameSr: 'Либерија', flagFile: 'lr.svg' },
-    { code: 'ci', nameEn: 'Ivory Coast', nameSr: 'Обала Слоноваче', flagFile: 'ci.svg' },
-    { code: 'gh', nameEn: 'Ghana', nameSr: 'Гана', flagFile: 'gh.svg' },
-    { code: 'tg', nameEn: 'Togo', nameSr: 'Того', flagFile: 'tg.svg' },
-    { code: 'bj', nameEn: 'Benin', nameSr: 'Бенин', flagFile: 'bj.svg' },
-    { code: 'bf', nameEn: 'Burkina Faso', nameSr: 'Буркина Фасо', flagFile: 'bf.svg' },
-    { code: 'ml', nameEn: 'Mali', nameSr: 'Мали', flagFile: 'ml.svg' },
-    { code: 'ne', nameEn: 'Niger', nameSr: 'Нигер', flagFile: 'ne.svg' },
-    { code: 'td', nameEn: 'Chad', nameSr: 'Чад', flagFile: 'td.svg' },
-    { code: 'cm', nameEn: 'Cameroon', nameSr: 'Камерун', flagFile: 'cm.svg' },
-    { code: 'cf', nameEn: 'Central African Republic', nameSr: 'Централноафричка Република', flagFile: 'cf.svg' },
-    { code: 'cg', nameEn: 'Republic of the Congo', nameSr: 'Република Конго', flagFile: 'cg.svg' },
-    { code: 'cd', nameEn: 'Democratic Republic of the Congo', nameSr: 'Демократска Република Конго', flagFile: 'cd.svg' },
-    { code: 'ga', nameEn: 'Gabon', nameSr: 'Габон', flagFile: 'ga.svg' },
-    { code: 'gq', nameEn: 'Equatorial Guinea', nameSr: 'Екваторијална Гвинеја', flagFile: 'gq.svg' },
-    { code: 'st', nameEn: 'São Tomé and Príncipe', nameSr: 'Сао Томе и Принсипе', flagFile: 'st.svg' },
-    { code: 'ao', nameEn: 'Angola', nameSr: 'Ангола', flagFile: 'ao.svg' },
-    { code: 'zm', nameEn: 'Zambia', nameSr: 'Замбија', flagFile: 'zm.svg' },
-    { code: 'zw', nameEn: 'Zimbabwe', nameSr: 'Зимбабве', flagFile: 'zw.svg' },
-    { code: 'bw', nameEn: 'Botswana', nameSr: 'Боцвана', flagFile: 'bw.svg' },
-    { code: 'na', nameEn: 'Namibia', nameSr: 'Намибија', flagFile: 'na.svg' },
-    { code: 'sz', nameEn: 'Eswatini', nameSr: 'Есватини', flagFile: 'sz.svg' },
-    { code: 'ls', nameEn: 'Lesotho', nameSr: 'Лесото', flagFile: 'ls.svg' },
-    { code: 'mg', nameEn: 'Madagascar', nameSr: 'Мадагаскар', flagFile: 'mg.svg' },
-    { code: 'mu', nameEn: 'Mauritius', nameSr: 'Маурицијус', flagFile: 'mu.svg' },
-    { code: 'sc', nameEn: 'Seychelles', nameSr: 'Сејшели', flagFile: 'sc.svg' },
-    { code: 'km', nameEn: 'Comoros', nameSr: 'Комори', flagFile: 'km.svg' },
-    { code: 'dj', nameEn: 'Djibouti', nameSr: 'Џибути', flagFile: 'dj.svg' },
-    { code: 'so', nameEn: 'Somalia', nameSr: 'Сомалија', flagFile: 'so.svg' },
-    { code: 'et', nameEn: 'Ethiopia', nameSr: 'Етиопија', flagFile: 'et.svg' },
-    { code: 'er', nameEn: 'Eritrea', nameSr: 'Еритреја', flagFile: 'er.svg' },
-    { code: 'ss', nameEn: 'South Sudan', nameSr: 'Јужни Судан', flagFile: 'ss.svg' },
-    { code: 'sd', nameEn: 'Sudan', nameSr: 'Судан', flagFile: 'sd.svg' },
-    { code: 'ly', nameEn: 'Libya', nameSr: 'Либија', flagFile: 'ly.svg' },
-    { code: 'tn', nameEn: 'Tunisia', nameSr: 'Тунис', flagFile: 'tn.svg' },
-    { code: 'dz', nameEn: 'Algeria', nameSr: 'Алжир', flagFile: 'dz.svg' },
-    { code: 'mr', nameEn: 'Mauritania', nameSr: 'Мауританија', flagFile: 'mr.svg' },
-    { code: 'eh', nameEn: 'Western Sahara', nameSr: 'Западна Сахара', flagFile: 'eh.svg' },
-    { code: 'af', nameEn: 'Afghanistan', nameSr: 'Авганистан', flagFile: 'af.svg' },
-    { code: 'bt', nameEn: 'Bhutan', nameSr: 'Бутан', flagFile: 'bt.svg' },
-    { code: 'mv', nameEn: 'Maldives', nameSr: 'Малдиви', flagFile: 'mv.svg' },
-    { code: 'tw', nameEn: 'Taiwan', nameSr: 'Тајван', flagFile: 'tw.svg' },
-    { code: 'um', nameEn: 'United States Minor Outlying Islands', nameSr: 'Спољна острва САД', flagFile: 'um.svg' },
-    { code: 'om', nameEn: 'Oman', nameSr: 'Оман', flagFile: 'om.svg' },
-    { code: 'qa', nameEn: 'Qatar', nameSr: 'Катар', flagFile: 'qa.svg' },
-    { code: 'sy', nameEn: 'Syria', nameSr: 'Сирија', flagFile: 'sy.svg' },
-    { code: 'kp', nameEn: 'North Korea', nameSr: 'Северна Кореја', flagFile: 'kp.svg' },
-    { code: 'lb', nameEn: 'Lebanon', nameSr: 'Либан', flagFile: 'lb.svg' },
-    { code: 'gb-wls', nameEn: 'Wales', nameSr: 'Велс', flagFile: 'gb-wls.svg' },
-    { code: 'gu', nameEn: 'Guam', nameSr: 'Гуам', flagFile: 'gu.svg' },
-    { code: 'cx', nameEn: 'Christmas Island', nameSr: 'Божићно острво', flagFile: 'cx.svg' },
-    { code: 'as', nameEn: 'American Samoa', nameSr: 'Америчка Самоа', flagFile: 'as.svg' },
-    { code: 'ax', nameEn: 'Åland Islands', nameSr: 'Оландска острва', flagFile: 'ax.svg' },
-    { code: 'bh', nameEn: 'Bahrain', nameSr: 'Бахреин', flagFile: 'bh.svg' },
-    { code: 'bi', nameEn: 'Burundi', nameSr: 'Бурунди', flagFile: 'bi.svg' },
-    { code: 'bq', nameEn: 'Caribbean Netherlands', nameSr: 'Карипска Холандија', flagFile: 'bq.svg' },
-    { code: 'cc', nameEn: 'Cocos Islands', nameSr: 'Кокосова Острва', flagFile: 'cc.svg' },
-    { code: 'fo', nameEn: 'Faroe Islands', nameSr: 'Фарска Острва', flagFile: 'fo.svg' },
-    { code: 'gb-eng', nameEn: 'England', nameSr: 'Енглеска', flagFile: 'gb-eng.svg' },
-    { code: 'gb-nir', nameEn: 'Northern Ireland', nameSr: 'Северна Ирска', flagFile: 'gb-nir.svg' },
-    { code: 'gb-sct', nameEn: 'Scotland', nameSr: 'Шкотска', flagFile: 'gb-sct.svg' },
-    { code: 'gg', nameEn: 'Guernsey', nameSr: 'Гернзи', flagFile: 'gg.svg' },
-    { code: 'gl', nameEn: 'Greenland', nameSr: 'Гренланд', flagFile: 'gl.svg' },
-    { code: 'gm', nameEn: 'Gambia', nameSr: 'Гамбија', flagFile: 'gm.svg' },
-    { code: 'hk', nameEn: 'Hong Kong', nameSr: 'Хонг Конг', flagFile: 'hk.svg' },
-    { code: 'im', nameEn: 'Isle of Man', nameSr: 'Острво Ман', flagFile: 'im.svg' },
-    { code: 'iq', nameEn: 'Iraq', nameSr: 'Ирак', flagFile: 'iq.svg' },
-    { code: 'je', nameEn: 'Jersey', nameSr: 'Џерзи', flagFile: 'je.svg' },
-    { code: 'jo', nameEn: 'Jordan', nameSr: 'Јордан', flagFile: 'jo.svg' },
-    { code: 'kw', nameEn: 'Kuwait', nameSr: 'Кувајт', flagFile: 'kw.svg' },
-    { code: 'mo', nameEn: 'Macau', nameSr: 'Макао', flagFile: 'mo.svg' },
-    { code: 'mp', nameEn: 'Northern Mariana Islands', nameSr: 'Северна Маријанска Острва', flagFile: 'mp.svg' },
-    { code: 'nf', nameEn: 'Norfolk Island', nameSr: 'Острво Норфок', flagFile: 'nf.svg' },
-    { code: 'pn', nameEn: 'Pitcairn Islands', nameSr: 'Питкернска Острва', flagFile: 'pn.svg' },
-    { code: 'rw', nameEn: 'Rwanda', nameSr: 'Руанда', flagFile: 'rw.svg' },
-    { code: 'sj', nameEn: 'Svalbard and Jan Mayen', nameSr: 'Свалбард и Јан Мајен', flagFile: 'sj.svg' },
-    { code: 'sn', nameEn: 'Senegal', nameSr: 'Сенегал', flagFile: 'sn.svg' },
-    { code: 'tl', nameEn: 'East Timor', nameSr: 'Источни Тимор', flagFile: 'tl.svg' },
-    { code: 'tt', nameEn: 'Trinidad and Tobago', nameSr: 'Тринидад и Тобаго', flagFile: 'tt.svg' },
-    { code: 'tz', nameEn: 'Tanzania', nameSr: 'Танзанија', flagFile: 'tz.svg' },
-    { code: 'ug', nameEn: 'Uganda', nameSr: 'Уганда', flagFile: 'ug.svg' },
-    { code: 'vi', nameEn: 'U.S. Virgin Islands', nameSr: 'Америчка Девичанска Острва', flagFile: 'vi.svg' },
-    { code: 'ye', nameEn: 'Yemen', nameSr: 'Јемен', flagFile: 'ye.svg' }
-  ];
+}
+
+// Utility function to get Europe countries specifically
+export async function fetchEuropeCountries(): Promise<Country[]> {
+  return fetchCountries('Europe');
+}
+
+// Legacy export for backward compatibility - uses the fallback data
+export const countries = fallbackCountries;
