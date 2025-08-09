@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import enMessages from '../../messages/en.json';
 import srMessages from '../../messages/sr.json';
-import { countries } from '../data/countries';
+import { countries, fetchCountries } from '../data/countries';
 
 type Language = 'en' | 'sr';
 
@@ -23,6 +23,7 @@ const messages = {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
+  const [allCountries, setAllCountries] = useState(countries); // Start with fallback data
 
   // Load language preference from localStorage on mount
   useEffect(() => {
@@ -30,6 +31,23 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'sr')) {
       setLanguage(savedLanguage);
     }
+  }, []);
+
+  // Load countries from API on mount
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        const apiCountries = await fetchCountries();
+        if (apiCountries.length > 0) {
+          setAllCountries(apiCountries);
+        }
+      } catch (error) {
+        console.error('Failed to load countries from API, using fallback:', error);
+        // Keep using the fallback countries
+      }
+    };
+    
+    loadCountries();
   }, []);
 
   // Save language preference to localStorage when it changes
@@ -69,7 +87,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   // Get country name by ISO code from countries data
   const countryName = (isoCode: string): string => {
-    const country = countries.find(c => c.code.toLowerCase() === isoCode.toLowerCase());
+    const country = allCountries.find(c => c.code.toLowerCase() === isoCode.toLowerCase());
     if (country) {
       return language === 'en' ? country.nameEn : country.nameSr;
     }

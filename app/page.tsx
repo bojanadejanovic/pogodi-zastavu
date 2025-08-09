@@ -7,7 +7,6 @@ import GameResults from './components/GameResults';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import Footer from './components/Footer';
 import { getRandomQuestions, FlagQuestion as FlagQuestionType } from './data/flags';
-import { europe } from './data/europe';
 import { useLanguage } from './contexts/LanguageContext';
 
 type GameState = 'start' | 'playing' | 'results';
@@ -31,24 +30,30 @@ export default function Home() {
     });
   };
 
-  const startGame = () => {
+  const startGame = async () => {
     setIsLoading(true);
-    let randomQuestions;
-    if (mode === 'europe') {
-      randomQuestions = getRandomQuestions(10, europe);
-    } else {
-      randomQuestions = getRandomQuestions(15);
-    }
-    setQuestions(randomQuestions);
-    setCurrentQuestionIndex(0);
-    setScore(0);
-    
-    // Preload images and then start the game
-    setTimeout(() => {
-      preloadImages(randomQuestions);
-      setGameState('playing');
+    try {
+      let randomQuestions;
+      if (mode === 'europe') {
+        randomQuestions = await getRandomQuestions(10, 'Europe');
+      } else {
+        randomQuestions = await getRandomQuestions(15);
+      }
+      setQuestions(randomQuestions);
+      setCurrentQuestionIndex(0);
+      setScore(0);
+      
+      // Preload images and then start the game
+      setTimeout(() => {
+        preloadImages(randomQuestions);
+        setGameState('playing');
+        setIsLoading(false);
+      }, 50); // Reduced from 100ms to 50ms
+    } catch (error) {
+      console.error('Failed to start game:', error);
       setIsLoading(false);
-    }, 50); // Reduced from 100ms to 50ms
+      // Could show an error message to user here
+    }
   };
 
   const handleAnswer = (isCorrect: boolean) => {
