@@ -4,31 +4,54 @@ const POCKETBASE_URL = process.env.POCKETBASE_URL;
 
 export async function GET() {
   try {
-    // Get today's date in UTC (start of day) to ensure consistency across environments
+    // Get today's date in multiple formats to ensure compatibility
     const now = new Date();
-    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-    const todayISO = today.toISOString().replace('T', ' ').replace('.000Z', '');
     
-    // Get tomorrow's date in UTC (end of day)
-    const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
-    const tomorrowISO = tomorrow.toISOString().replace('T', ' ').replace('.000Z', '');
+    // Try local timezone first (most common case)
+    const localToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const localTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+    
+    // Also prepare UTC versions as fallback
+    const utcToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+    const utcTomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
+    
+    // PocketBase typically expects ISO format
+    const todayISO = localToday.toISOString();
+    const tomorrowISO = localTomorrow.toISOString();
+    
+    // Also try the format that was being used before (space instead of T)
+    const todaySpaceFormat = todayISO.replace('T', ' ').replace('.000Z', '');
+    const tomorrowSpaceFormat = tomorrowISO.replace('T', ' ').replace('.000Z', '');
 
     // Debug logging
     console.log('Leaderboard API Debug:', {
-      todayISO,
-      tomorrowISO,
-      currentTime: new Date().toISOString(),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      currentTime: now.toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      localToday: localToday.toISOString(),
+      localTomorrow: localTomorrow.toISOString(),
+      utcToday: utcToday.toISOString(),
+      utcTomorrow: utcTomorrow.toISOString(),
+      todaySpaceFormat,
+      tomorrowSpaceFormat
     });
 
-    // Get all scores from today, then filter for those with names
-    const todayFilter = `created >= "${todayISO}" && created < "${tomorrowISO}"`;
-    const searchQuery = `${POCKETBASE_URL}/api/collections/scores/records?filter=${todayFilter}&sort=-score,-created&perPage=50`
-    const allScoresRes = await fetch(searchQuery);
+    // Try with ISO format first
+    let todayFilter = `created >= "${todayISO}" && created < "${tomorrowISO}"`;
+    let searchQuery = `${POCKETBASE_URL}/api/collections/scores/records?filter=${encodeURIComponent(todayFilter)}&sort=-score,-created&perPage=50`;
+    let allScoresRes = await fetch(searchQuery);
+
+    // If that fails, try with space format
+    if (!allScoresRes.ok) {
+      console.log('ISO format failed, trying space format...');
+      todayFilter = `created >= "${todaySpaceFormat}" && created < "${tomorrowSpaceFormat}"`;
+      searchQuery = `${POCKETBASE_URL}/api/collections/scores/records?filter=${encodeURIComponent(todayFilter)}&sort=-score,-created&perPage=50`;
+      allScoresRes = await fetch(searchQuery);
+    }
 
     if (!allScoresRes.ok) {
       const error = await allScoresRes.json();
       console.error('PocketBase error (all scores):', error);
+      console.error('Final filter used:', todayFilter);
       return NextResponse.json({ error: 'Failed to fetch scores' }, { status: allScoresRes.status });
     }
 
@@ -55,7 +78,7 @@ export async function GET() {
     });
 
     // Filter scores that have names (all scores from today are already fetched)
-    const scoresWithNames = allScoresData.items.filter((item: any) => {
+    const scoresWithNames = (allScoresData.items || []).filter((item: any) => {
       const hasName = item.name && item.name.trim() !== '';
       
       // Debug each item

@@ -167,14 +167,17 @@ export default function GameResults({ score, totalQuestions, onRestart, mode }: 
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               placeholder={t('ui.namePlaceholder')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 bg-white text-base"
               maxLength={50}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="words"
             />
-            <div className="flex gap-2 mt-3">
+            <div className="flex flex-col sm:flex-row gap-2 mt-3">
               <button
                 onClick={() => saveScore(playerName)}
                 disabled={isSaving}
-                className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSaving ? t('ui.saving') : t('ui.saveScore')}
               </button>
@@ -184,7 +187,7 @@ export default function GameResults({ score, totalQuestions, onRestart, mode }: 
                   setPlayerName('');
                 }}
                 disabled={isSaving}
-                className="flex-1 bg-gray-400 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-gray-400 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t('ui.skipSaving')}
               </button>
