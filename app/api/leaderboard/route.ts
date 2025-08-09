@@ -21,7 +21,7 @@ export async function GET() {
     // Use standard ISO format that PocketBase expects
     const todayFilter = `created >= "${todayISO}"`;
     const searchQuery = `${POCKETBASE_URL}/api/collections/scores/records?filter=${encodeURIComponent(todayFilter)}&sort=-score,-created&perPage=100`;
-    
+    console.log('Search query:', searchQuery);
     const allScoresRes = await fetch(searchQuery);
 
     if (!allScoresRes.ok) {

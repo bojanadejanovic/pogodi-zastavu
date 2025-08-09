@@ -58,13 +58,14 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
     setIsAnswered(true);
     setShowResult(true);
     
-    // Show result for 1 second before moving to next question (reduced from 2 seconds)
+    // Show result longer for incorrect answers so user can learn the correct answer
+    const delayMs = isCorrect ? 1000 : 2500; // 1s for correct, 2.5s for incorrect
     setTimeout(() => {
       onAnswer(isCorrect);
       setSelectedAnswer('');
       setIsAnswered(false);
       setShowResult(false);
-    }, 1000);
+    }, delayMs);
   };
 
   const isCorrect = selectedAnswer === question.correctAnswer;
@@ -180,14 +181,13 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                   className={`flex items-center p-2 md:p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
                     ${isAnswered
                       ? option === question.correctAnswer
-                        ? 'border-success-500 bg-success-50'
+                        ? 'border-green-600 !bg-green-400 shadow-lg ring-2 ring-green-300 cursor-default'
                         : selectedAnswer === option
-                          ? 'border-error-500 bg-error-50'
-                          : 'border-gray-200'
+                          ? 'border-red-600 !bg-red-400 cursor-default'
+                          : 'border-gray-200 cursor-default'
                       : selectedAnswer === option
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'}
-                    ${isAnswered ? 'cursor-default' : 'hover:bg-gray-50'}`}
+                        ? 'border-primary-500 bg-primary-50 hover:bg-gray-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
                 >
                   <input
                     type="radio"
@@ -202,8 +202,8 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                     selectedAnswer === option
                       ? isAnswered
                         ? option === question.correctAnswer
-                          ? 'border-success-500 bg-success-500'
-                          : 'border-error-500 bg-error-500'
+                          ? 'border-green-500 bg-green-500'
+                          : 'border-red-500 bg-red-500'
                         : 'border-primary-500 bg-primary-500'
                       : 'border-gray-300'
                   }`}>
@@ -214,9 +214,9 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                   <span className={`font-medium flex items-center gap-2
                     ${isAnswered
                       ? option === question.correctAnswer
-                        ? 'text-success-700'
+                        ? 'text-green-900 font-bold'
                         : selectedAnswer === option
-                          ? 'text-error-700'
+                          ? 'text-red-900 font-bold'
                         : 'text-gray-900'
                       : selectedAnswer === option
                         ? 'text-gray-900'
@@ -224,10 +224,10 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                   `}>
                     {countryName(option)}
                     {isAnswered && option === question.correctAnswer && (
-                      <span className="ml-2 text-success-700">✅</span>
+                      <span className="ml-2 text-green-700">✅</span>
                     )}
                     {isAnswered && selectedAnswer === option && option !== question.correctAnswer && (
-                      <span className="ml-2 text-error-700">❌</span>
+                      <span className="ml-2 text-red-700">❌</span>
                     )}
                   </span>
                 </label>
@@ -362,14 +362,13 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                 className={`flex items-center p-2 md:p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
                   ${isAnswered
                     ? option === question.correctAnswer
-                      ? 'border-success-500 bg-success-50'
+                      ? 'border-green-600 !bg-green-400 shadow-lg ring-2 ring-green-300 cursor-default'
                       : selectedAnswer === option
-                        ? 'border-error-500 bg-error-50'
-                        : 'border-gray-200'
+                        ? 'border-red-600 !bg-red-400 cursor-default'
+                        : 'border-gray-200 cursor-default'
                     : selectedAnswer === option
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300'}
-                  ${isAnswered ? 'cursor-default' : 'hover:bg-gray-50'}`}
+                      ? 'border-primary-500 bg-primary-50 hover:bg-gray-50'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
               >
                 <input
                   type="radio"
@@ -384,8 +383,8 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                   selectedAnswer === option
                     ? isAnswered
                       ? option === question.correctAnswer
-                        ? 'border-success-500 bg-success-500'
-                        : 'border-error-500 bg-error-500'
+                        ? 'border-green-500 bg-green-500'
+                        : 'border-red-500 bg-red-500'
                       : 'border-primary-500 bg-primary-500'
                     : 'border-gray-300'
                 }`}>
@@ -396,9 +395,9 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                 <span className={`font-medium flex items-center gap-2
                   ${isAnswered
                     ? option === question.correctAnswer
-                      ? 'text-success-700'
+                      ? 'text-green-900 font-bold'
                       : selectedAnswer === option
-                        ? 'text-error-700'
+                        ? 'text-red-900 font-bold'
                         : 'text-gray-900'
                     : selectedAnswer === option
                       ? 'text-gray-900'
@@ -406,10 +405,10 @@ export default function FlagQuestion({ question, onAnswer, questionNumber, total
                 `}>
                   {countryName(option)}
                   {isAnswered && option === question.correctAnswer && (
-                    <span className="ml-2 text-success-700">✅</span>
+                    <span className="ml-2 text-green-700">✅</span>
                   )}
                   {isAnswered && selectedAnswer === option && option !== question.correctAnswer && (
-                    <span className="ml-2 text-error-700">❌</span>
+                    <span className="ml-2 text-red-700">❌</span>
                   )}
                 </span>
               </label>
