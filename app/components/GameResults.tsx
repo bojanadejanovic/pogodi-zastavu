@@ -4,190 +4,201 @@ import { useLanguage } from '../contexts/LanguageContext';
 import Confetti from './Confetti';
 import { useEffect, useState, useRef } from 'react';
 import { getOrCreateUserId } from '../utils/user';
+import type { FlagQuestion } from '../data/flags';
+import type { GameMode } from '../types';
 
 interface GameResultsProps {
   score: number;
   totalQuestions: number;
   onRestart: () => void;
-  mode: 'world' | 'europe'; // Add mode prop
+  mode: GameMode;
+  questions: FlagQuestion[];
+  answers: boolean[];
 }
 
-export default function GameResults({ score, totalQuestions, onRestart, mode }: GameResultsProps) {
-  const { t } = useLanguage();
+export default function GameResults({
+  score,
+  totalQuestions,
+  onRestart,
+  mode,
+  questions,
+  answers,
+}: GameResultsProps) {
+  const { t, countryName } = useLanguage();
   const percentage = Math.round((score / totalQuestions) * 100);
-  
-  // --- Persistence logic ---
-  const [history, setHistory] = useState<{score: number, totalQuestions: number, createdAt: string, name?: string | null}[]>([]);
-  const [showNameInput, setShowNameInput] = useState(false);
+
   const [playerName, setPlayerName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [history, setHistory] = useState<{ score: number; totalQuestions: number; createdAt: string; name?: string | null }[]>([]);
   const hasSaved = useRef(false);
 
-  async function fetchScores(userId: string) {
-    const res = await fetch(`/api/get-scores?userId=${userId}`);
-    const data = await res.json();
-    setHistory(data.scores || []);
-  }
+  useEffect(() => {
+    const stored = localStorage.getItem('pogodi-best');
+    const prev = stored ? parseInt(stored, 10) : 0;
+    if (score > prev) localStorage.setItem('pogodi-best', String(score));
+  }, [score]);
 
-  const saveScore = async (name?: string) => {
+  useEffect(() => {
+    if (hasSaved.current) return;
+    hasSaved.current = true;
+    const userId = getOrCreateUserId();
+    fetch(`/api/get-scores?userId=${userId}`)
+      .then(r => r.json())
+      .then(data => setHistory(data.scores || []))
+      .catch(() => {});
+  }, []);
+
+  const saveScore = async () => {
+    if (!playerName.trim()) return;
     setIsSaving(true);
     setSaveStatus('idle');
-    
     try {
       const userId = getOrCreateUserId();
-      const response = await fetch('/api/save-score', {
+      const res = await fetch('/api/save-score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, score, totalQuestions, name }),
+        body: JSON.stringify({ userId, score, totalQuestions, name: playerName.trim(), mode }),
       });
-      
-      if (response.ok) {
+      if (res.ok) {
         setSaveStatus('success');
-        // Fetch updated history
-        fetchScores(userId);
+        const data = await fetch(`/api/get-scores?userId=${userId}`).then(r => r.json());
+        setHistory(data.scores || []);
       } else {
         setSaveStatus('error');
       }
-    } catch (error) {
-      console.error('Error saving score:', error);
+    } catch {
       setSaveStatus('error');
     } finally {
       setIsSaving(false);
     }
   };
 
-  useEffect(() => {
-    if (hasSaved.current) return;
-    hasSaved.current = true;
+  const isPerfect = mode === 'world' ? score >= 14 : score === totalQuestions;
 
-    // Don't auto-save anymore, let user choose
-    const userId = getOrCreateUserId();
-    // Just fetch history
-    fetchScores(userId);
-  }, [score, totalQuestions]);
-  // --- End persistence logic ---
-
-  const getMessage = () => {
-    if (percentage === 100) return t('results.perfect');
-    if (percentage >= 80) return t('results.excellent');
-    if (percentage >= 60) return t('results.good');
-    if (percentage >= 40) return t('results.notBad');
-    return t('results.keepStudying');
-  };
-
-  const getEmoji = () => {
-    if (percentage === 100) return "🏆";
-    if (percentage >= 80) return "🌟";
-    if (percentage >= 60) return "👍";
-    if (percentage >= 40) return "📚";
-    return "💪";
-  };
-
-  // Show confetti for 14/15 or 15/15 in world mode, or 10/10 in europe mode
-  const isPerfectScore = (mode === 'world' && score >= 14) || (mode === 'europe' && score === 10);
+  const resultLabel =
+    percentage >= 90 ? t('results.perfect') :
+    percentage >= 70 ? t('results.excellent') :
+    percentage >= 50 ? t('results.good') :
+    percentage >= 30 ? t('results.notBad') :
+    t('results.keepStudying');
 
   return (
-    <div className="mt-4 max-w-2xl mx-auto p-8 bg-white rounded-lg shadow-lg text-center">
-      <Confetti trigger={isPerfectScore} />
-      <div className="mb-8">
-        <div className="text-6xl mb-4">{getEmoji()}</div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">{t('game.results')}</h1>
-        <p className="text-lg text-gray-600 mb-6">{getMessage()}</p>
-      </div>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 60 }}>
+      <Confetti trigger={isPerfect} />
 
-      <div className={`p-6 rounded-lg mb-8 ${
-        isPerfectScore 
-          ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 animate-pulse' 
-          : 'bg-gradient-to-r from-primary-50 to-blue-50'
-      }`}>
-        <div className={`text-4xl font-bold mb-2 ${
-          isPerfectScore ? 'text-yellow-600' : 'text-primary-600'
-        }`}>
-          {score}/{totalQuestions}
+      <div style={{ maxWidth: 520, margin: '0 auto', padding: '72px 20px 0', textAlign: 'center' }}>
+
+        {/* Label */}
+        <div style={{
+          fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
+          color: 'var(--ink-3)', marginBottom: 12,
+        }}>
+          {t('game.results')}
         </div>
-        <div className="text-xl text-gray-600 mb-4">
+
+        {/* Result message */}
+        <h2 style={{
+          fontSize: 'clamp(28px, 8vw, 44px)',
+          fontFamily: "'Instrument Serif', serif",
+          fontStyle: 'italic',
+          fontWeight: 400,
+          color: 'var(--accent-ink)',
+          margin: '0 0 8px',
+          letterSpacing: '-0.01em',
+        }}>
+          {resultLabel}
+        </h2>
+
+        {/* Big score */}
+        <div style={{
+          fontSize: 'clamp(56px, 16vw, 80px)',
+          fontWeight: 600,
+          letterSpacing: '-0.04em',
+          lineHeight: 1,
+          margin: '20px 0',
+          color: 'var(--ink)',
+        }}>
+          {score}
+          <span style={{ color: 'var(--ink-3)' }}>/{totalQuestions}</span>
+        </div>
+
+        <div style={{
+          fontFamily: "'Geist Mono', ui-monospace, monospace",
+          color: 'var(--ink-2)', fontSize: 13, marginBottom: 36,
+        }}>
           {t('ui.percentage', { percentage })}
         </div>
-        
-        {/* Score visualization */}
-        <div className="flex justify-center space-x-1 mb-4">
-          {Array.from({ length: totalQuestions }, (_, i) => (
-            <div
-              key={i}
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                i < score
-                  ? 'bg-success-500 text-white'
-                  : 'bg-gray-300 text-gray-600'
-              }`}
-            >
-              {i < score ? '✓' : '✗'}
-            </div>
+
+        {/* Dot grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${Math.min(totalQuestions, 10)}, 1fr)`,
+          gap: 5,
+          maxWidth: 300,
+          margin: '0 auto 36px',
+        }}>
+          {answers.map((a, i) => (
+            <div key={i} style={{
+              aspectRatio: '1',
+              borderRadius: 4,
+              background: a ? 'var(--good)' : 'var(--bad)',
+              opacity: 0.85,
+            }} />
           ))}
         </div>
-      </div>
 
-      <div className="space-y-4">
-        {/* Save Score Section */}
-        {saveStatus === 'idle' && !showNameInput && (
-          <div className="bg-gray-50 p-4 rounded-lg border">
-            <p className="text-sm text-gray-600 mb-3">{t('ui.saveScoreDescription')}</p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <button
-                onClick={() => setShowNameInput(true)}
-                className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200"
-              >
-                {t('ui.saveScoreWithName')}
-              </button>
-              <button
-                onClick={() => saveScore()}
-                className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200"
-              >
-                {t('ui.saveScore')}
-              </button>
-              <button
-                onClick={() => setSaveStatus('success')}
-                className="flex-1 bg-gray-400 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-500 transition-colors duration-200"
-              >
-                {t('ui.skipSaving')}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Name Input Section */}
-        {showNameInput && (
-          <div className="bg-gray-50 p-4 rounded-lg border">
-            <label htmlFor="playerName" className="block text-sm font-medium text-gray-700 mb-2">
+        {/* Save score */}
+        {saveStatus === 'idle' && (
+          <div style={{
+            background: 'var(--card)', border: '1px solid var(--line)',
+            borderRadius: 14, padding: 20, marginBottom: 24, textAlign: 'left',
+          }}>
+            <label htmlFor="playerName" style={{ display: 'block', fontSize: 13, color: 'var(--ink-2)', marginBottom: 8 }}>
               {t('ui.nameLabel')}
             </label>
             <input
               id="playerName"
               type="text"
               value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
+              onChange={e => setPlayerName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') saveScore(); }}
               placeholder={t('ui.namePlaceholder')}
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 bg-white text-base"
               maxLength={50}
               autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="words"
+              style={{
+                width: '100%', padding: '10px 12px',
+                border: '1.5px solid var(--line)', borderRadius: 10,
+                fontSize: 14, color: 'var(--ink)', background: 'var(--bg)',
+                outline: 'none', boxSizing: 'border-box',
+                fontFamily: 'inherit',
+              }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = 'var(--line)'; }}
             />
-            <div className="flex flex-col sm:flex-row gap-2 mt-3">
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <button
-                onClick={() => saveScore(playerName)}
-                disabled={isSaving}
-                className="flex-1 bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={saveScore}
+                disabled={isSaving || !playerName.trim()}
+                style={{
+                  flex: 1,
+                  background: playerName.trim() ? 'var(--ink)' : 'var(--line)',
+                  color: playerName.trim() ? 'var(--bg)' : 'var(--ink-3)',
+                  border: 'none', borderRadius: 10, padding: '10px 16px',
+                  fontSize: 13, fontWeight: 600,
+                  cursor: isSaving || !playerName.trim() ? 'not-allowed' : 'pointer',
+                  transition: 'all 150ms ease',
+                }}
               >
                 {isSaving ? t('ui.saving') : t('ui.saveScore')}
               </button>
               <button
-                onClick={() => {
-                  setShowNameInput(false);
-                  setPlayerName('');
+                onClick={() => setSaveStatus('success')}
+                style={{
+                  background: 'transparent', color: 'var(--ink-3)',
+                  border: '1px solid var(--line)', borderRadius: 10, padding: '10px 16px',
+                  fontSize: 13, fontWeight: 500, cursor: 'pointer',
                 }}
-                disabled={isSaving}
-                className="flex-1 bg-gray-400 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t('ui.skipSaving')}
               </button>
@@ -195,55 +206,125 @@ export default function GameResults({ score, totalQuestions, onRestart, mode }: 
           </div>
         )}
 
-        {/* Save Status Messages */}
         {saveStatus === 'success' && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+          <div style={{
+            background: 'var(--good-soft)', border: '1px solid var(--good)',
+            borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 13,
+            color: 'var(--ink)',
+          }}>
             {t('ui.scoreSaved')}
           </div>
         )}
-        
         {saveStatus === 'error' && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+          <div style={{
+            background: 'var(--bad-soft)', border: '1px solid var(--bad)',
+            borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 13,
+            color: 'var(--ink)',
+          }}>
             {t('ui.scoreSaveError')}
           </div>
         )}
 
-        {/* Play Again Button - only show after save decision */}
-        {(saveStatus === 'success' || saveStatus === 'error') && (
-          <button
-            onClick={onRestart}
-            className="w-full bg-primary-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-600 transform hover:scale-105 transition-all duration-200"
-          >
-            {t('game.playAgain')}
-          </button>
+        {/* Play again — always visible */}
+        <button
+          onClick={onRestart}
+          style={{
+            background: 'var(--ink)', color: 'var(--bg)',
+            border: 'none', borderRadius: 12, padding: '13px 24px',
+            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            marginBottom: 24, width: '100%', maxWidth: 280,
+          }}
+        >
+          {t('game.playAgain')}
+        </button>
+
+        {/* Review list */}
+        {questions.length > 0 && (
+          <div style={{ marginTop: 40, textAlign: 'left' }}>
+            <div style={{
+              fontSize: 11, color: 'var(--ink-3)', textTransform: 'uppercase',
+              letterSpacing: '0.08em', marginBottom: 12,
+            }}>
+              Преглед
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {questions.map((q, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 12px',
+                  background: 'var(--card)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 10,
+                }}>
+                  <div style={{
+                    width: 40, height: 27, borderRadius: 4, overflow: 'hidden',
+                    boxShadow: '0 0 0 1px var(--line)', flexShrink: 0,
+                  }}>
+                    <img
+                      src={q.flagImage}
+                      alt=""
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  </div>
+                  <span style={{
+                    fontFamily: "'Geist Mono', ui-monospace, monospace",
+                    fontSize: 11, color: 'var(--ink-3)', width: 20, flexShrink: 0,
+                  }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span style={{ flex: 1, fontSize: 14, color: 'var(--ink)' }}>
+                    {countryName(q.correctAnswer)}
+                  </span>
+                  <span style={{
+                    fontSize: 13, fontWeight: 700,
+                    color: answers[i] ? 'var(--good)' : 'var(--bad)',
+                  }}>
+                    {answers[i] ? '✓' : '✕'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
-        
-        <div className="text-sm text-gray-500">
-          {t('game.challenge')}
-        </div>
 
         {/* Score history */}
         {history.length > 0 && (
-          <div className="mt-6 text-left">
-            <div className="font-semibold mb-2 text-gray-800">{t('ui.previousScores')}</div>
-            <ul className="space-y-2 text-sm">
+          <div style={{ marginTop: 40, textAlign: 'left' }}>
+            <div style={{
+              fontSize: 11, color: 'var(--ink-3)', textTransform: 'uppercase',
+              letterSpacing: '0.08em', marginBottom: 12,
+            }}>
+              {t('ui.previousScores')}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {history.slice(0, 10).map((h, i) => (
-                <li key={i} className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <span className="font-medium text-base text-gray-900">{h.score}/{h.totalQuestions}</span>
+                <div key={i} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 12px',
+                  background: 'var(--card)', border: '1px solid var(--line)',
+                  borderRadius: 10, fontSize: 13,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontWeight: 600 }}>{h.score}/{h.totalQuestions}</span>
                     {h.name && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      <span style={{
+                        fontSize: 11, background: 'var(--accent-soft)',
+                        color: 'var(--accent-ink)', padding: '2px 8px',
+                        borderRadius: 999, fontWeight: 500,
+                      }}>
                         {h.name}
                       </span>
                     )}
                   </div>
-                  <span className="text-gray-500 text-xs sm:text-sm break-all">{new Date(h.createdAt).toLocaleString()}</span>
-                </li>
+                  <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>
+                    {new Date(h.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
-} 
+}

@@ -1,93 +1,75 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { REGION_BY_MODE } from '../../data/regions';
+import type { GameMode } from '../../types';
 
 const POCKETBASE_URL = process.env.POCKETBASE_URL;
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    // Use UTC consistently for date calculations to avoid timezone issues in deployment
     const now = new Date();
-    
-    // Get today in UTC (start of day)
-    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-    
+    const sevenDaysAgo = new Date(Date.UTC(
+      now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 7
+    ));
 
-    // But also consider that scores might be stored in different timezones
-    // So let's be more inclusive - go back 24 hours from UTC today to catch scores from any timezone
-    const yesterdayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1, 0, 0, 0, 0));
-    
-    // Use the broader range to ensure we don't miss scores due to timezone differences
-    const todayISO = yesterdayUTC.toISOString();
+    const modeParam = req.nextUrl.searchParams.get('region') as GameMode | null;
+    const region = modeParam ? REGION_BY_MODE[modeParam] : null;
 
-    // Use standard ISO format that PocketBase expects
-    const todayFilter = `created >= "${todayISO}"`;
-    const searchQuery = `${POCKETBASE_URL}/api/collections/scores/records?filter=${encodeURIComponent(todayFilter)}&sort=-score,-created&perPage=100`;
-    console.log('Search query:', searchQuery);
-    const allScoresRes = await fetch(searchQuery);
+    const filter = `created >= "${sevenDaysAgo.toISOString()}"`;
 
-    if (!allScoresRes.ok) {
-      const error = await allScoresRes.json();
-      console.error('PocketBase error (all scores):', error);
-      console.error('Filter used:', todayFilter);
-      return NextResponse.json({ error: 'Failed to fetch scores' }, { status: allScoresRes.status });
+    const res = await fetch(
+      `${POCKETBASE_URL}/api/collections/scores/records?filter=${encodeURIComponent(filter)}&sort=-created&perPage=500`,
+      { cache: 'no-store' }
+    );
+
+    if (!res.ok) {
+      console.error('PocketBase error:', await res.text());
+      return NextResponse.json({ error: 'Failed to fetch scores' }, { status: res.status });
     }
 
-    const allScoresData = await allScoresRes.json();
-    
-    // Debug logging for all scores from the query
-    console.log('Fetched scores:', {
-      totalItems: allScoresData.items?.length || 0,
-      items: allScoresData.items?.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        score: item.score,
-        created: item.created,
-        dateOnly: new Date(item.created).toISOString().split('T')[0]
-      })) || []
-    });
+    const data = await res.json();
 
-    // Filter scores that have names AND are from today (current UTC date)
-    const todayDateString = todayUTC.toISOString().split('T')[0]; // YYYY-MM-DD format
-    
-    const scoresWithNames = (allScoresData.items || []).filter((item: any) => {
-      const hasName = item.name && item.name.trim() !== '';
-      
-      // Check if the score is from today (UTC date)
-      const scoreDate = new Date(item.created).toISOString().split('T')[0];
-      const isFromToday = scoreDate === todayDateString;
-      
-      return hasName && isFromToday;
-    });
+    const withNames = (data.items || []).filter(
+      (item: any) => item.name && item.name.trim() !== '' &&
+        (!region || item.region === region.id)
+    );
 
-    console.log('Final filtered scores:', {
-      totalWithNames: scoresWithNames.length,
-      todayDateString,
-      scores: scoresWithNames.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        score: item.score,
-        created: item.created
-      }))
-    });
-
-    // Sort by score (highest first), then by creation time (earliest first for tiebreakers)
-    const sortedScores = scoresWithNames.sort((a: any, b: any) => {
-      if (b.score !== a.score) {
-        return b.score - a.score;
+    // Per player keep their best result by percentage, then raw score
+    const bestPerPlayer = new Map<string, any>();
+    for (const item of withNames) {
+      const key = item.name.trim().toLowerCase();
+      const existing = bestPerPlayer.get(key);
+      if (!existing) {
+        bestPerPlayer.set(key, item);
+      } else {
+        const newPct = item.score / item.totalQuestions;
+        const existingPct = existing.score / existing.totalQuestions;
+        if (
+          newPct > existingPct ||
+          (newPct === existingPct && item.score > existing.score) ||
+          (newPct === existingPct && item.score === existing.score &&
+            new Date(item.created) < new Date(existing.created))
+        ) {
+          bestPerPlayer.set(key, item);
+        }
       }
+    }
+
+    const sorted = Array.from(bestPerPlayer.values()).sort((a: any, b: any) => {
+      const pctA = a.score / a.totalQuestions;
+      const pctB = b.score / b.totalQuestions;
+      if (pctB !== pctA) return pctB - pctA;
+      if (b.score !== a.score) return b.score - a.score;
       return new Date(a.created).getTime() - new Date(b.created).getTime();
     });
 
-    // Take top 5
-    const topScores = sortedScores.slice(0, 5);
-    
-    // Transform the data to include percentage and format properly
-    const leaderboard = topScores.map((item: any) => ({
+    const leaderboard = sorted.slice(0, 10).map((item: any) => ({
       id: item.id,
       name: item.name,
       score: item.score,
       totalQuestions: item.totalQuestions,
       percentage: Math.round((item.score / item.totalQuestions) * 100),
       createdAt: item.created,
+      region: item.region || null,
     }));
 
     return NextResponse.json({ leaderboard });
@@ -95,4 +77,4 @@ export async function GET() {
     console.error('Leaderboard API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-} 
+}

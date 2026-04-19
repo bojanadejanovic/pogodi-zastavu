@@ -1,11 +1,12 @@
 import { countries, Country, fetchCountries } from './countries';
+import { getContinent } from './continents';
 
 export interface FlagQuestion {
   id: number;
   flagImage: string;
   correctAnswer: string;
   options: string[];
-  countryCode: string; // ISO country code
+  countryCode: string;
 }
 
 export function shuffleArray<T>(array: T[]): T[] {
@@ -17,94 +18,46 @@ export function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-// Updated function to support async country fetching
 export async function getRandomQuestions(
-  count: number = 15, 
+  count: number = 15,
   continent?: string
 ): Promise<FlagQuestion[]> {
-  let countryList: Country[];
-  
+  // Always fetch the full list; filter client-side using the hardcoded continent map
+  // so we're not dependent on PocketBase having the continent field populated.
+  let allCountries: Country[];
   try {
-    // Try to fetch from API first
-    if (continent) {
-      countryList = await fetchCountries(continent);
-    } else {
-      countryList = await fetchCountries();
-    }
-    
-    // Fallback to static data if API returns empty
-    if (countryList.length === 0) {
-      countryList = countries;
-    }
-  } catch (error) {
-    console.error('Failed to fetch countries, using fallback:', error);
-    countryList = countries;
+    allCountries = await fetchCountries();
+  } catch {
+    allCountries = countries;
   }
 
-  // Ensure we have enough countries for the requested count
-  if (countryList.length < count) {
-    console.warn(`Not enough countries (${countryList.length}) for requested count (${count})`);
-    count = countryList.length;
-  }
+  let pool = continent
+    ? allCountries.filter(c => getContinent(c.code) === continent)
+    : allCountries;
 
-  // Shuffle all countries once and take the first 'count' as questions
-  const shuffledCountries = shuffleArray(countryList);
-  const selectedCountries = shuffledCountries.slice(0, count);
-  
-  // Pre-shuffle remaining countries for wrong answers to avoid repeated shuffling
-  const remainingCountries = shuffledCountries.slice(count);
-  const shuffledRemaining = shuffleArray(remainingCountries);
-  
-  return selectedCountries.map((country, index) => {
-    // Get 3 random wrong answers from the pre-shuffled remaining countries
-    // Use modulo to cycle through if we run out of countries
-    const wrongAnswers = [];
-    for (let i = 0; i < 3; i++) {
-      const wrongIndex = (index * 3 + i) % shuffledRemaining.length;
-      wrongAnswers.push(shuffledRemaining[wrongIndex]);
+  // If the filtered pool is empty (unknown continent or no matching codes), use everything
+  if (pool.length === 0) pool = allCountries;
+
+  const actualCount = Math.min(count, pool.length);
+
+  const shuffled = shuffleArray(pool);
+  const selected = shuffled.slice(0, actualCount);
+  // Wrong answers drawn from the full list so options are always plausible
+  const wrongPool = shuffleArray(allCountries);
+
+  return selected.map((country, index) => {
+    const wrongAnswers: Country[] = [];
+    for (let i = 0; wrongAnswers.length < 3; i++) {
+      const candidate = wrongPool[(index * 3 + i) % wrongPool.length];
+      if (candidate.code !== country.code) wrongAnswers.push(candidate);
     }
-    
-    // Create options array with correct answer and 3 wrong answers
     const options = shuffleArray([country.code, ...wrongAnswers.map(c => c.code)]);
-    
     return {
       id: index + 1,
       flagImage: `/flags_svg/${country.flagFile}`,
       correctAnswer: country.code,
-      options: options,
-      countryCode: country.code
+      options,
+      countryCode: country.code,
     };
   });
 }
-
-// Legacy function for backward compatibility - synchronous version
-export function getRandomQuestionsSync(count: number = 15, countryList: Country[] = countries): FlagQuestion[] {
-  // Shuffle all countries once and take the first 'count' as questions
-  const shuffledCountries = shuffleArray(countryList);
-  const selectedCountries = shuffledCountries.slice(0, count);
-  
-  // Pre-shuffle remaining countries for wrong answers to avoid repeated shuffling
-  const remainingCountries = shuffledCountries.slice(count);
-  const shuffledRemaining = shuffleArray(remainingCountries);
-  
-  return selectedCountries.map((country, index) => {
-    // Get 3 random wrong answers from the pre-shuffled remaining countries
-    // Use modulo to cycle through if we run out of countries
-    const wrongAnswers = [];
-    for (let i = 0; i < 3; i++) {
-      const wrongIndex = (index * 3 + i) % shuffledRemaining.length;
-      wrongAnswers.push(shuffledRemaining[wrongIndex]);
-    }
-    
-    // Create options array with correct answer and 3 wrong answers
-    const options = shuffleArray([country.code, ...wrongAnswers.map(c => c.code)]);
-    
-    return {
-      id: index + 1,
-      flagImage: `/flags_svg/${country.flagFile}`,
-      correctAnswer: country.code,
-      options: options,
-      countryCode: country.code
-    };
-  });
-} 

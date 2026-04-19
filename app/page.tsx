@@ -1,65 +1,73 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import GameStart from './components/GameStart';
 import FlagQuestion from './components/FlagQuestion';
 import GameResults from './components/GameResults';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import Footer from './components/Footer';
 import { getRandomQuestions, FlagQuestion as FlagQuestionType } from './data/flags';
-import { useLanguage } from './contexts/LanguageContext';
+
+import type { GameMode } from './types';
 
 type GameState = 'start' | 'playing' | 'results';
-type GameMode = 'world' | 'europe';
+
+const CONTINENT_MAP: Record<GameMode, string | undefined> = {
+  world: undefined,
+  europe: 'Europe',
+  africa: 'Africa',
+  asia: 'Asia',
+  americas: 'Americas',
+  oceania: 'Oceania',
+};
 
 export default function Home() {
-  const { t } = useLanguage();
   const [gameState, setGameState] = useState<GameState>('start');
   const [questions, setQuestions] = useState<FlagQuestionType[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const [answers, setAnswers] = useState<boolean[]>([]);
+  const [streak, setStreak] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<GameMode>('world');
 
-  // Preload flag images
-  const preloadImages = (questions: FlagQuestionType[]) => {
-    // Preload all flag images for faster transitions
-    questions.forEach(question => {
+  const preloadImages = (qs: FlagQuestionType[]) => {
+    qs.forEach(q => {
       const img = new Image();
-      img.src = question.flagImage;
+      img.src = q.flagImage;
     });
   };
 
   const startGame = async () => {
     setIsLoading(true);
     try {
-      let randomQuestions;
-      if (mode === 'europe') {
-        randomQuestions = await getRandomQuestions(10, 'Europe');
-      } else {
-        randomQuestions = await getRandomQuestions(15);
-      }
+      const continent = CONTINENT_MAP[mode];
+      const count = continent ? 10 : 15;
+      const randomQuestions = await getRandomQuestions(count, continent);
       setQuestions(randomQuestions);
       setCurrentQuestionIndex(0);
       setScore(0);
-      
-      // Preload images and then start the game
+      setAnswers([]);
+      setStreak(0);
       setTimeout(() => {
         preloadImages(randomQuestions);
         setGameState('playing');
         setIsLoading(false);
-      }, 50); // Reduced from 100ms to 50ms
+      }, 50);
     } catch (error) {
       console.error('Failed to start game:', error);
       setIsLoading(false);
-      // Could show an error message to user here
     }
   };
 
   const handleAnswer = (isCorrect: boolean) => {
     if (isCorrect) {
       setScore(prev => prev + 1);
+      setStreak(prev => prev + 1);
+    } else {
+      setStreak(0);
     }
+    setAnswers(prev => [...prev, isCorrect]);
 
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
@@ -77,33 +85,36 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4 flex flex-col">
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <LanguageSwitcher />
-      <div className="container mx-auto flex-1">
-        {gameState === 'start' && (
-          <GameStart onStartGame={startGame} isLoading={isLoading} mode={mode} setMode={setMode} />
-        )}
-        
-        {gameState === 'playing' && questions.length > 0 && (
-          <FlagQuestion
-            question={questions[currentQuestionIndex]}
-            onAnswer={handleAnswer}
-            questionNumber={currentQuestionIndex + 1}
-            totalQuestions={questions.length}
-            onQuit={handleQuit}
-          />
-        )}
-        
-        {gameState === 'results' && (
-          <GameResults
-            score={score}
-            totalQuestions={questions.length}
-            onRestart={restartGame}
-            mode={mode} // Pass mode to GameResults
-          />
-        )}
-      </div>
-      <Footer />
-    </main>
+      {gameState === 'start' && (
+        <GameStart
+          onStartGame={startGame}
+          isLoading={isLoading}
+          mode={mode}
+          setMode={setMode}
+        />
+      )}
+      {gameState === 'playing' && questions.length > 0 && (
+        <FlagQuestion
+          question={questions[currentQuestionIndex]}
+          onAnswer={handleAnswer}
+          questionNumber={currentQuestionIndex + 1}
+          totalQuestions={questions.length}
+          onQuit={handleQuit}
+          streak={streak}
+        />
+      )}
+      {gameState === 'results' && (
+        <GameResults
+          score={score}
+          totalQuestions={questions.length}
+          onRestart={restartGame}
+          mode={mode}
+          questions={questions}
+          answers={answers}
+        />
+      )}
+    </div>
   );
-} 
+}

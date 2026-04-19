@@ -1,4 +1,4 @@
-import { Country, fetchEuropeCountries } from './countries';
+import { Country, fetchCountries } from './countries';
 
 // Fallback static Europe data for backward compatibility
 const fallbackEurope: Country[] = [
@@ -38,7 +38,7 @@ export const europe = fallbackEurope;
 // New function to get Europe countries from API with fallback
 export async function getEuropeCountries(): Promise<Country[]> {
   try {
-    const countries = await fetchEuropeCountries();
+    const countries = await fetchCountries();
     return countries.length > 0 ? countries : fallbackEurope;
   } catch (error) {
     console.error('Failed to fetch Europe countries, using fallback:', error);
