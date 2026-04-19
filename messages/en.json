@@ -6,7 +6,8 @@
     "start": "Start Game",
     "question": "Which country does this flag belong to?",
     "submit": "Submit Answer",
-    "moving": "Moving to next question...",
+    "moving": "Next Question",
+    "seeResults": "See Results",
     "correct": "Correct! Well done!",
     "incorrect": "Incorrect. The correct answer is {country}.",
     "results": "Game Complete!",
@@ -35,6 +36,7 @@
     "percentage": "{percentage}% Correct",
     "quit": "Quit Game",
     "loading": "Loading...",
+    "streak": "in a row",
     "reportError": "Report an error",
     "previousScores": "Your Previous Scores:",
     "saveScore": "Save Score",
@@ -96,15 +98,29 @@
   },
   "mode": {
     "world": "World",
-    "europe": "Europe"
+    "europe": "Europe",
+    "africa": "Africa",
+    "asia": "Asia",
+    "americas": "Americas",
+    "oceania": "Oceania"
+  },
+  "home": {
+    "titleMain": "Guess the",
+    "titleAccent": "Flag",
+    "chooseRegion": "Choose a region",
+    "stat": {
+      "questions": "questions",
+      "countries": "countries",
+      "best": "best"
+    }
   },
   "leaderboard": {
-    "title": "Top Scorers Today",
-    "subtitle": "See who's leading the flag guessing game today!",
+    "title": "Top Scorers",
+    "subtitle": "Best results from the last 7 days",
     "backToHome": "Back to Home",
     "loading": "Loading leaderboard...",
     "tryAgain": "Try Again",
-    "noScores": "No scores yet today",
+    "noScores": "No scores in the last 7 days",
     "playToAppear": "Play the game and save your score with a name to appear here!",
     "footer": "Only scores with names are shown on the leaderboard"
   }

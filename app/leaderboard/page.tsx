@@ -5,6 +5,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Footer from '../components/Footer';
 import Link from 'next/link';
+import { REGIONS } from '../data/regions';
+import type { GameMode } from '../types';
 
 interface LeaderboardEntry {
   id: string;
@@ -15,154 +17,214 @@ interface LeaderboardEntry {
   createdAt: string;
 }
 
+// Include "All" as the first tab
+const TABS = [{ mode: null as GameMode | null, label: 'All' }, ...REGIONS.map(r => ({ mode: r.mode, label: r.name }))];
+
 export default function LeaderboardPage() {
   const { t } = useLanguage();
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [activeTab, setActiveTab] = useState<GameMode | null>(null);
+  const [cache, setCache] = useState<Record<string, LeaderboardEntry[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchLeaderboard();
-  }, []);
+  const cacheKey = activeTab ?? 'all';
+  const leaderboard = cache[cacheKey] ?? [];
 
-  const fetchLeaderboard = async () => {
+  useEffect(() => {
+    if (cache[cacheKey] !== undefined) return;
+    fetchLeaderboard(activeTab);
+  }, [activeTab]);
+
+  const fetchLeaderboard = async (mode: GameMode | null) => {
+    setIsLoading(true);
+    setError(null);
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      const response = await fetch('/api/leaderboard');
-      if (!response.ok) {
-        throw new Error('Failed to fetch leaderboard');
-      }
-      
-      const data = await response.json();
-      setLeaderboard(data.leaderboard || []);
-    } catch (err) {
-      console.error('Error fetching leaderboard:', err);
+      const url = mode ? `/api/leaderboard?region=${mode}` : '/api/leaderboard';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setCache(prev => ({ ...prev, [mode ?? 'all']: data.leaderboard || [] }));
+    } catch {
       setError('Failed to load leaderboard');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getMedal = (position: number) => {
-    switch (position) {
-      case 1: return '🥇';
-      case 2: return '🥈';
-      case 3: return '🥉';
-      default: return `#${position}`;
-    }
-  };
-
-  const getScoreColor = (percentage: number) => {
-    if (percentage === 100) return 'text-yellow-600';
-    if (percentage >= 80) return 'text-green-600';
-    if (percentage >= 60) return 'text-blue-600';
-    if (percentage >= 40) return 'text-orange-600';
-    return 'text-gray-600';
-  };
+  const getMedal = (i: number) =>
+    i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4 flex flex-col">
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
       <LanguageSwitcher />
-      <div className="container mx-auto flex-1">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-800 mb-4">
-              🏆 {t('leaderboard.title')}
-            </h1>
-            <p className="text-lg text-gray-600 mb-6">
-              {t('leaderboard.subtitle')}
-            </p>
-            
-            {/* Return to home button */}
-            <Link
-              href="/"
-              className="inline-flex items-center px-6 py-3 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 transform hover:scale-105 transition-all duration-200"
-            >
-              ← {t('leaderboard.backToHome')}
-            </Link>
-          </div>
 
-          {/* Leaderboard */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="text-2xl mb-4">⏳</div>
-                <p className="text-gray-600">{t('leaderboard.loading')}</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-8">
-                <div className="text-2xl mb-4">❌</div>
-                <p className="text-red-600 mb-4">{error}</p>
+      <div style={{ flex: 1, maxWidth: 600, margin: '0 auto', padding: '72px 20px 0', width: '100%' }}>
+
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{
+            fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: 'var(--ink-3)', marginBottom: 12,
+          }}>
+            {t('leaderboard.subtitle')}
+          </div>
+          <h1 style={{
+            fontSize: 'clamp(28px, 7vw, 44px)',
+            fontWeight: 600, letterSpacing: '-0.03em',
+            margin: '0 0 24px', color: 'var(--ink)',
+          }}>
+            {t('leaderboard.title')}
+          </h1>
+          <Link
+            href="/"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 13, fontWeight: 500, color: 'var(--ink-2)',
+              textDecoration: 'none', padding: '8px 16px',
+              border: '1px solid var(--line)', borderRadius: 999,
+              background: 'var(--card)', transition: 'border-color 150ms ease',
+            }}
+          >
+            ← {t('leaderboard.backToHome')}
+          </Link>
+        </div>
+
+        {/* Region tabs */}
+        <div style={{ overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
+          <div style={{
+            display: 'inline-flex',
+            background: 'var(--bg-2)',
+            border: '1px solid var(--line)',
+            borderRadius: 999,
+            padding: 3,
+            gap: 2,
+            minWidth: 'max-content',
+          }}>
+            {TABS.map(tab => {
+              const active = activeTab === tab.mode;
+              const label = tab.mode ? t(`mode.${tab.mode}`) : 'All / Све';
+              return (
                 <button
-                  onClick={fetchLeaderboard}
-                  className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors duration-200"
+                  key={tab.mode ?? 'all'}
+                  onClick={() => setActiveTab(tab.mode)}
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: 13, fontWeight: 500,
+                    border: 'none', borderRadius: 999,
+                    background: active ? 'var(--card)' : 'transparent',
+                    color: active ? 'var(--ink)' : 'var(--ink-2)',
+                    boxShadow: active ? '0 1px 2px rgba(0,0,0,0.06), 0 0 0 1px var(--line)' : 'none',
+                    transition: 'all 150ms ease',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
                 >
-                  {t('leaderboard.tryAgain')}
+                  {label}
                 </button>
-              </div>
-            ) : leaderboard.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="text-2xl mb-4">📊</div>
-                <p className="text-gray-600 mb-2">{t('leaderboard.noScores')}</p>
-                <p className="text-sm text-gray-500">{t('leaderboard.playToAppear')}</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {leaderboard.map((entry, index) => (
-                  <div
-                    key={entry.id}
-                    className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-200 ${
-                      index === 0 
-                        ? 'border-yellow-300 bg-gradient-to-r from-yellow-50 to-orange-50' 
-                        : index === 1 
-                        ? 'border-gray-300 bg-gradient-to-r from-gray-50 to-slate-50'
-                        : index === 2
-                        ? 'border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50'
-                        : 'border-gray-200 bg-gray-50'
-                    }`}
-                  >
-                    {/* Position and Medal */}
-                    <div className="flex items-center space-x-4">
-                      <div className="text-2xl font-bold text-gray-700 min-w-[40px]">
-                        {getMedal(index + 1)}
-                      </div>
-                      
-                      {/* Player Info */}
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-lg text-gray-800">
-                          {entry.name}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {new Date(entry.createdAt).toLocaleDateString()} {new Date(entry.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Score */}
-                    <div className="text-right">
-                      <div className={`text-2xl font-bold ${getScoreColor(entry.percentage)}`}>
-                        {entry.score}/{entry.totalQuestions}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {entry.percentage}%
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Footer Info */}
-          <div className="text-center mt-6 text-sm text-gray-500">
-            <p>{t('leaderboard.footer')}</p>
+              );
+            })}
           </div>
         </div>
+
+        {/* Board */}
+        <div style={{
+          background: 'var(--card)', border: '1px solid var(--line)',
+          borderRadius: 16, overflow: 'hidden', marginBottom: 16,
+        }}>
+          {isLoading ? (
+            <div style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--ink-3)', fontSize: 13 }}>
+              {t('leaderboard.loading')}
+            </div>
+          ) : error ? (
+            <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+              <div style={{ color: 'var(--bad)', fontSize: 13, marginBottom: 16 }}>{error}</div>
+              <button
+                onClick={() => fetchLeaderboard(activeTab)}
+                style={{
+                  background: 'var(--ink)', color: 'var(--bg)',
+                  border: 'none', borderRadius: 10, padding: '10px 20px',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                {t('leaderboard.tryAgain')}
+              </button>
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+              <div style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 8 }}>
+                {t('leaderboard.noScores')}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+                {t('leaderboard.playToAppear')}
+              </div>
+            </div>
+          ) : (
+            leaderboard.map((entry, i) => {
+              const medal = getMedal(i);
+              const isTop3 = i < 3;
+              return (
+                <div
+                  key={entry.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 14,
+                    padding: '14px 18px',
+                    borderBottom: i < leaderboard.length - 1 ? '1px solid var(--line)' : 'none',
+                    background: i === 0 ? 'oklch(0.97 0.015 80)' : 'var(--card)',
+                  }}
+                >
+                  {/* Rank */}
+                  <div style={{
+                    width: 32, textAlign: 'center', flexShrink: 0,
+                    fontSize: isTop3 ? 20 : 13,
+                    fontFamily: isTop3 ? 'inherit' : "'Geist Mono', ui-monospace, monospace",
+                    color: 'var(--ink-3)', fontWeight: isTop3 ? 400 : 500,
+                  }}>
+                    {medal ?? `${i + 1}`}
+                  </div>
+
+                  {/* Name + time */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 15, fontWeight: 600, color: 'var(--ink)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {entry.name}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 1 }}>
+                      {new Date(entry.createdAt).toLocaleDateString()}{' '}
+                      {new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+
+                  {/* Score */}
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{
+                      fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em',
+                      color: entry.percentage === 100 ? 'var(--accent-ink)'
+                        : entry.percentage >= 80 ? 'var(--good)'
+                        : 'var(--ink)',
+                    }}>
+                      {entry.score}/{entry.totalQuestions}
+                    </div>
+                    <div style={{
+                      fontSize: 11, color: 'var(--ink-3)', marginTop: 1,
+                      fontFamily: "'Geist Mono', ui-monospace, monospace",
+                    }}>
+                      {entry.percentage}%
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--ink-3)', paddingBottom: 8 }}>
+          {t('leaderboard.footer')}
+        </div>
       </div>
+
       <Footer />
-    </main>
+    </div>
   );
-} 
+}

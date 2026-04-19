@@ -7,7 +7,10 @@ export async function GET(req: NextRequest) {
   if (!userId) {
     return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
   }
-  const res = await fetch(`${POCKETBASE_URL}/api/collections/scores/records?filter=userId="${userId}"&sort=-created&perPage=10`);
+  const res = await fetch(
+    `${POCKETBASE_URL}/api/collections/scores/records?filter=${encodeURIComponent(`userId="${userId}"`)}&sort=-created&perPage=10`,
+    { cache: 'no-store' }
+  );
   if (!res.ok) {
     const error = await res.json();
     return NextResponse.json(error, { status: res.status });

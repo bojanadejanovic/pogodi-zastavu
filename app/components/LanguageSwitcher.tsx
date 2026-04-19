@@ -6,29 +6,39 @@ export default function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage();
 
   return (
-    <div className="fixed top-4 right-4 z-50">
-      <div className="flex items-center space-x-2 bg-white rounded-lg shadow-lg p-2 border">
-        <button
-          onClick={() => setLanguage('en')}
-          className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-            language === 'en'
-              ? 'bg-primary-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          EN
-        </button>
-        <button
-          onClick={() => setLanguage('sr')}
-          className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-            language === 'sr'
-              ? 'bg-primary-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          СР
-        </button>
+    <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 50 }}>
+      <div style={{
+        display: 'inline-flex',
+        background: 'var(--bg-2)',
+        border: '1px solid var(--line)',
+        borderRadius: 999,
+        padding: 3,
+        gap: 2,
+      }}>
+        {(['en', 'sr'] as const).map(lang => {
+          const active = language === lang;
+          return (
+            <button
+              key={lang}
+              onClick={() => setLanguage(lang)}
+              style={{
+                padding: '4px 10px',
+                fontSize: 12,
+                fontWeight: 500,
+                border: 'none',
+                borderRadius: 999,
+                background: active ? 'var(--card)' : 'transparent',
+                color: active ? 'var(--ink)' : 'var(--ink-2)',
+                boxShadow: active ? '0 1px 2px rgba(0,0,0,0.06), 0 0 0 1px var(--line)' : 'none',
+                transition: 'all 150ms ease',
+                cursor: 'pointer',
+              }}
+            >
+              {lang === 'en' ? 'EN' : 'СР'}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
-} 
+}

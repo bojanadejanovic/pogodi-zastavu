@@ -32,58 +32,35 @@ const fallbackCountries: Country[] = [
   { code: 'rs', nameEn: 'Serbia', nameSr: 'Србија', flagFile: 'rs.svg', continent: 'Europe' },
 ];
 
-// Cache for countries data
+// Cache for the full country list
 let countriesCache: Country[] | null = null;
-let europeCache: Country[] | null = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Service to fetch countries from PocketBase API with fallback
-export async function fetchCountries(continent?: string): Promise<Country[]> {
+// Always fetches the full list; continent filtering is done by the caller using the hardcoded map.
+export async function fetchCountries(): Promise<Country[]> {
   try {
-    // Check cache first
     const now = Date.now();
     if (countriesCache && now - lastFetchTime < CACHE_DURATION) {
-      if (continent) {
-        return countriesCache.filter(c => c.continent === continent);
-      }
       return countriesCache;
     }
 
-    let url = '/api/countries';
-    if (continent) {
-      url += `?continent=${encodeURIComponent(continent)}`;
-    }
-    
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Failed to fetch countries');
-    }
-    
+    const response = await fetch('/api/countries');
+    if (!response.ok) throw new Error('Failed to fetch countries');
+
     const data = await response.json();
-    const countries = data.countries || [];
-    
-    // Update cache if we got all countries
-    if (!continent && countries.length > 0) {
-      countriesCache = countries;
+    const fetched: Country[] = data.countries || [];
+
+    if (fetched.length > 0) {
+      countriesCache = fetched;
       lastFetchTime = now;
     }
-    
-    return countries;
+
+    return fetched.length > 0 ? fetched : fallbackCountries;
   } catch (error) {
     console.error('Error fetching countries from API, using fallback:', error);
-    
-    // Return fallback data filtered by continent if specified
-    if (continent) {
-      return fallbackCountries.filter(c => c.continent === continent);
-    }
     return fallbackCountries;
   }
-}
-
-// Utility function to get Europe countries specifically
-export async function fetchEuropeCountries(): Promise<Country[]> {
-  return fetchCountries('Europe');
 }
 
 // Legacy export for backward compatibility - uses the fallback data
