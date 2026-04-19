@@ -28,9 +28,15 @@ export async function GET(req: NextRequest) {
 
     const data = await res.json();
 
+    const getRegionId = (item: any): string | null => {
+      const r = item.region;
+      if (!r) return null;
+      return Array.isArray(r) ? (r[0] ?? null) : r;
+    };
+
     const withNames = (data.items || []).filter(
       (item: any) => item.name && item.name.trim() !== '' &&
-        (!region || item.region === region.id)
+        (!region || getRegionId(item) === region.id)
     );
 
     // Per player keep their best result by percentage, then raw score
